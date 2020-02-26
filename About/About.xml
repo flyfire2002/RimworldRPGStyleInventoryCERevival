@@ -1,8 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <ModMetaData>
-	<name>[1.0] RPG Style Inventory</name>
-	<author>Sandy</author>
-	<targetVersion>1.0.0</targetVersion>
-	<description>[V3.0] Displays your pawn's Gear tab in RPG style</description>
+  <packageId>Flyfire2002.RPGStyleInventoryCE</packageId>
+	<name>RPG Style Inventory CE Revived [1.0]</name>
+	<author>flyfire2002</author>
+	<supportedVersions>
+		<li>1.0</li>
+	</supportedVersions>
+	<description>
+    This is a fork of RPG Style Inventory made for Combat Extended.
+    Credit goes to the author of RPG Style Inventory, Combat Extended, and the original author of RPG Style Inventory CE.
+    This project wouldn't exist if not for their fantastic work.
+    If you like it, go to the original mod page and leave an upvote.
+
+    I will maintain this fork until original mod is made compatible with combat extended.
+
+    Load Order:
+    Core
+    Combat Extended
+    This Mod
+
+    (Since this is a fork of RPG style inventory, you don't need the original mod)
+  </description>
 </ModMetaData>

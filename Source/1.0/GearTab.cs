@@ -17,7 +17,7 @@ namespace Sandy_Detailed_RPG_Inventory
 
 		private float scrollViewHeight;
 
-		private const float TopPadding = 20f;
+        private const float TopPadding = 20f;
 
 		public static readonly new Color ThingLabelColor = new Color(0.9f, 0.9f, 0.9f, 1f);
 
@@ -34,6 +34,12 @@ namespace Sandy_Detailed_RPG_Inventory
 		private static List<Thing> workingInvList = new List<Thing>();
 		
 		public static readonly Vector3 PawnTextureCameraOffset = new Vector3(0f, 0f, 0f);
+
+        private const float UniversalMargin = 10f;
+
+        private const float CheckboxHeight = 20f;
+
+        private const float CEAreaHeight = 60f;
 
         #region CE_Field
         private const float _barHeight = 20f;
@@ -56,73 +62,47 @@ namespace Sandy_Detailed_RPG_Inventory
 			this.tutorTag = "Gear";
 		}
 
-		public override bool IsVisible
-		{
-			get
-			{
-				Pawn selPawnForGear = this.SelPawnForGear;
-				return this.ShouldShowInventory(selPawnForGear) || this.ShouldShowApparel(selPawnForGear) || this.ShouldShowEquipment(selPawnForGear);
-			}
-		}
-		
-		/*private bool colonist
-		{
-			get
-			{
-				Pawn selPawnForGear = this.SelPawnForGear;
-				return !this.SelPawnForGear.RaceProps.IsMechanoid && !this.SelPawnForGear.RaceProps.Animal;
-			}
-		}*/
-
-		private bool CanControl
-		{
-			get
-			{
-				Pawn selPawnForGear = this.SelPawnForGear;
-				return !selPawnForGear.Downed && !selPawnForGear.InMentalState && (selPawnForGear.Faction == Faction.OfPlayer || selPawnForGear.IsPrisonerOfColony) && (!selPawnForGear.IsPrisonerOfColony || !selPawnForGear.Spawned || selPawnForGear.Map.mapPawns.AnyFreeColonistSpawned) && (!selPawnForGear.IsPrisonerOfColony || (!PrisonBreakUtility.IsPrisonBreaking(selPawnForGear) && (selPawnForGear.CurJob == null || !selPawnForGear.CurJob.exitMapOnArrival)));
-			}
-		}
-
-		private bool CanControlColonist
-		{
-			get
-			{
-				return this.CanControl && this.SelPawnForGear.IsColonistPlayerControlled;
-			}
-		}
-
-		private Pawn SelPawnForGear
-		{
-			get
-			{
-				if (base.SelPawn != null)
-				{
-					return base.SelPawn;
-				}
-				Corpse corpse = base.SelThing as Corpse;
-				if (corpse != null)
-				{
-					return corpse.InnerPawn;
-				}
-				throw new InvalidOperationException("Gear tab on non-pawn non-corpse " + base.SelThing);
-			}
-		}
-
 		protected override void FillTab()
 		{
 			Text.Font = GameFont.Small;
-			Rect rect0 = new Rect(20f, 0f, 100f, 30f);
-			Widgets.CheckboxLabeled(rect0, "Sandy_ViewList".Translate(), ref viewlist, false, null, null, false);
-			Rect rect = new Rect(0f, 20f, this.size.x, this.size.y - 20f);
-			Rect rect2 = rect.ContractedBy(10f);
+			Rect checkBox = new Rect(CheckboxHeight, 0f, 100f, 30f);
+			Widgets.CheckboxLabeled(checkBox, "Sandy_ViewList".Translate(), ref viewlist, false, null, null, false);
+
+            if (viewlist)
+            {
+                // Set an enclosing GUI group that contains the group from base.FillTab
+                // and the CE loadout bar.
+                Rect listViewPosition = new Rect(0f, 0f, size.x, size.y);
+                GUI.BeginGroup(listViewPosition);
+                Text.Font = GameFont.Small;
+                GUI.color = Color.white;
+
+                // Hack. Base Filltab use size.y to set BeginGroup. Change it here so the list GUI
+                // group doesn't overlap with CE loadout bars.
+                size.Set(size.x, size.y - CEAreaHeight);
+                base.FillTab();
+                // Restore the size.y, otherwise the tab will shrink by 60px per frame.
+                size.Set(size.x, size.y + CEAreaHeight);
+
+                // Shift the bar to compensate for the margin not set in current GUI group;
+                // same about the y.
+                TryDrawCEloadout(UniversalMargin, listViewPosition.height - CEAreaHeight - UniversalMargin, listViewPosition.width - CheckboxHeight - UniversalMargin * 2);
+                GUI.EndGroup();
+                GUI.color = Color.white;
+                Text.Anchor = TextAnchor.UpperLeft;
+                return;
+
+            }
+            Rect rect = new Rect(0f, CheckboxHeight, size.x, size.y - CheckboxHeight);
+            Rect rect2 = rect.ContractedBy(UniversalMargin);
 			Rect position = new Rect(rect2.x, rect2.y, rect2.width, rect2.height);
 			GUI.BeginGroup(position);
 			Text.Font = GameFont.Small;
 			GUI.color = Color.white;
-			Rect outRect = new Rect(0f, 0f, position.width, position.height - 60);
-			Rect viewRect = new Rect(0f, 0f, position.width - 20f, this.scrollViewHeight);
-			Widgets.BeginScrollView(outRect, ref this.scrollPosition, viewRect, true);
-			float num = 0f;
+			Rect outRect = new Rect(0f, 0f, position.width, position.height - CEAreaHeight);
+			Rect viewRect = new Rect(0f, 0f, position.width - UniversalMargin * 2, scrollViewHeight);
+            Widgets.BeginScrollView(outRect, ref this.scrollPosition, viewRect, true);
+            float num = 0f;
 			if (!viewlist)
 			{
 				if (this.SelPawnForGear.RaceProps.Humanlike)
@@ -531,7 +511,7 @@ namespace Sandy_Detailed_RPG_Inventory
 			}
 
 			Widgets.EndScrollView();
-            TryDrawCEloadout(position.height - 60, viewRect.width);
+            TryDrawCEloadout(0, position.height - 60f, viewRect.width);
             GUI.EndGroup();
 			GUI.color = Color.white;
 			Text.Anchor = TextAnchor.UpperLeft;
@@ -862,61 +842,15 @@ namespace Sandy_Detailed_RPG_Inventory
 			curY += 22f;
 		}
 
-		private void InterfaceDrop(Thing t)
-		{
-			ThingWithComps thingWithComps = t as ThingWithComps;
-			Apparel apparel = t as Apparel;
-			if (apparel != null && this.SelPawnForGear.apparel != null && this.SelPawnForGear.apparel.WornApparel.Contains(apparel))
-			{
-				this.SelPawnForGear.jobs.TryTakeOrderedJob(new Job(JobDefOf.RemoveApparel, apparel), JobTag.Misc);
-			}
-			else if (thingWithComps != null && this.SelPawnForGear.equipment != null && this.SelPawnForGear.equipment.AllEquipmentListForReading.Contains(thingWithComps))
-			{
-				this.SelPawnForGear.jobs.TryTakeOrderedJob(new Job(JobDefOf.DropEquipment, thingWithComps), JobTag.Misc);
-			}
-			else if (!t.def.destroyOnDrop)
-			{
-				Thing thing;
-				this.SelPawnForGear.inventory.innerContainer.TryDrop(t, this.SelPawnForGear.Position, this.SelPawnForGear.Map, ThingPlaceMode.Near, out thing, null, null);
-			}
-		}
-
-		private void InterfaceIngest(Thing t)
-		{
-			Job job = new Job(JobDefOf.Ingest, t);
-			job.count = Mathf.Min(t.stackCount, t.def.ingestible.maxNumToIngestAtOnce);
-			job.count = Mathf.Min(job.count, FoodUtility.WillIngestStackCountOf(this.SelPawnForGear, t.def, t.GetStatValue(StatDefOf.Nutrition, true)));
-			this.SelPawnForGear.jobs.TryTakeOrderedJob(job, JobTag.Misc);
-		}
-
-		private bool ShouldShowInventory(Pawn p)
-		{
-			return p.RaceProps.Humanlike || p.inventory.innerContainer.Any;
-		}
-
-		private bool ShouldShowApparel(Pawn p)
-		{
-			return p.apparel != null && (p.RaceProps.Humanlike || p.apparel.WornApparel.Any<Apparel>());
-		}
-
-		private bool ShouldShowEquipment(Pawn p)
-		{
-			return p.equipment != null;
-		}
-
-		private bool ShouldShowOverallArmor(Pawn p)
-		{
-			return p.RaceProps.Humanlike || this.ShouldShowApparel(p) || p.GetStatValue(StatDefOf.ArmorRating_Sharp, true) > 0f || p.GetStatValue(StatDefOf.ArmorRating_Blunt, true) > 0f || p.GetStatValue(StatDefOf.ArmorRating_Heat, true) > 0f;
-		}
-
-        private void TryDrawCEloadout(float y, float width) {
+        // xShift: how much to right to adjust the two bars
+        private void TryDrawCEloadout(float xShift, float y, float width) {
             CompInventory comp = SelPawn.TryGetComp<CompInventory>();
             if (comp != null) {
 
                 PlayerKnowledgeDatabase.KnowledgeDemonstrated(CE_ConceptDefOf.CE_InventoryWeightBulk, KnowledgeAmount.FrameDisplayed);
                 // adjust rects if comp found
-                Rect weightRect = new Rect(_margin, y + _margin / 2, width, _barHeight);
-                Rect bulkRect = new Rect(_margin, weightRect.yMax + _margin / 2, width, _barHeight);
+                Rect weightRect = new Rect(_margin + xShift, y + _margin / 2, width, _barHeight);
+                Rect bulkRect = new Rect(_margin + xShift, weightRect.yMax + _margin / 2, width, _barHeight);
 
                 // draw bars
                 Utility_Loadouts.DrawBar(bulkRect, comp.currentBulk, comp.capacityBulk, "CE_Bulk".Translate(), SelPawn.GetBulkTip());
@@ -937,5 +871,93 @@ namespace Sandy_Detailed_RPG_Inventory
                 Text.Anchor = TextAnchor.UpperLeft;
             }
         }
-	}
+
+        /*
+         * Everything below redefined from base class since they are private to it. Damn, Tynan.
+         */
+
+        private bool CanControl
+        {
+            get
+            {
+                Pawn selPawnForGear = this.SelPawnForGear;
+                return !selPawnForGear.Downed && !selPawnForGear.InMentalState
+                    && (selPawnForGear.Faction == Faction.OfPlayer || selPawnForGear.IsPrisonerOfColony)
+                    && (!selPawnForGear.IsPrisonerOfColony || !selPawnForGear.Spawned || selPawnForGear.Map.mapPawns.AnyFreeColonistSpawned)
+                    && (!selPawnForGear.IsPrisonerOfColony || (!PrisonBreakUtility.IsPrisonBreaking(selPawnForGear) && (selPawnForGear.CurJob == null || !selPawnForGear.CurJob.exitMapOnArrival)));
+            }
+        }
+
+        private bool CanControlColonist
+        {
+            get
+            {
+                return this.CanControl && this.SelPawnForGear.IsColonistPlayerControlled;
+            }
+        }
+
+        private Pawn SelPawnForGear
+        {
+            get
+            {
+                if (base.SelPawn != null)
+                {
+                    return base.SelPawn;
+                }
+                Corpse corpse = base.SelThing as Corpse;
+                if (corpse != null)
+                {
+                    return corpse.InnerPawn;
+                }
+                throw new InvalidOperationException("Gear tab on non-pawn non-corpse " + base.SelThing);
+            }
+        }
+
+        private void InterfaceDrop(Thing t)
+        {
+            ThingWithComps thingWithComps = t as ThingWithComps;
+            Apparel apparel = t as Apparel;
+            if (apparel != null && this.SelPawnForGear.apparel != null && this.SelPawnForGear.apparel.WornApparel.Contains(apparel))
+            {
+                this.SelPawnForGear.jobs.TryTakeOrderedJob(new Job(JobDefOf.RemoveApparel, apparel), JobTag.Misc);
+            }
+            else if (thingWithComps != null && this.SelPawnForGear.equipment != null && this.SelPawnForGear.equipment.AllEquipmentListForReading.Contains(thingWithComps))
+            {
+                this.SelPawnForGear.jobs.TryTakeOrderedJob(new Job(JobDefOf.DropEquipment, thingWithComps), JobTag.Misc);
+            }
+            else if (!t.def.destroyOnDrop)
+            {
+                Thing thing;
+                this.SelPawnForGear.inventory.innerContainer.TryDrop(t, this.SelPawnForGear.Position, this.SelPawnForGear.Map, ThingPlaceMode.Near, out thing, null, null);
+            }
+        }
+
+        private void InterfaceIngest(Thing t)
+        {
+            Job job = new Job(JobDefOf.Ingest, t);
+            job.count = Mathf.Min(t.stackCount, t.def.ingestible.maxNumToIngestAtOnce);
+            job.count = Mathf.Min(job.count, FoodUtility.WillIngestStackCountOf(this.SelPawnForGear, t.def, t.GetStatValue(StatDefOf.Nutrition, true)));
+            this.SelPawnForGear.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+        }
+
+        private bool ShouldShowInventory(Pawn p)
+        {
+            return p.RaceProps.Humanlike || p.inventory.innerContainer.Any;
+        }
+
+        private bool ShouldShowApparel(Pawn p)
+        {
+            return p.apparel != null && (p.RaceProps.Humanlike || p.apparel.WornApparel.Any<Apparel>());
+        }
+
+        private bool ShouldShowEquipment(Pawn p)
+        {
+            return p.equipment != null;
+        }
+
+        private bool ShouldShowOverallArmor(Pawn p)
+        {
+            return p.RaceProps.Humanlike || this.ShouldShowApparel(p) || p.GetStatValue(StatDefOf.ArmorRating_Sharp, true) > 0f || p.GetStatValue(StatDefOf.ArmorRating_Blunt, true) > 0f || p.GetStatValue(StatDefOf.ArmorRating_Heat, true) > 0f;
+        }
+    }
 }

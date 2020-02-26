@@ -68,7 +68,9 @@ namespace Sandy_Detailed_RPG_Inventory
             Rect checkBox = new Rect(CheckboxHeight, 0f, 100f, 30f);
             Widgets.CheckboxLabeled(checkBox, "Sandy_ViewList".Translate(), ref viewlist, false, null, null, false);
 
-            if (viewlist)
+            // Delegate to vanilla Filltab (sans drawing CE loadout bars) if show as list is chosen, or if the pawn is not human
+            // (e.g. muffalo with cargo)
+            if (viewlist || !this.SelPawnForGear.RaceProps.Humanlike)
             {
                 // Set an enclosing GUI group that contains the group from base.FillTab
                 // and the CE loadout bar.
@@ -91,38 +93,26 @@ namespace Sandy_Detailed_RPG_Inventory
                 GUI.color = Color.white;
                 Text.Anchor = TextAnchor.UpperLeft;
                 return;
-
             }
             Rect rect = new Rect(0f, CheckboxHeight, size.x, size.y - CheckboxHeight);
             Rect rect2 = rect.ContractedBy(UniversalMargin);
             Rect position = new Rect(rect2.x, rect2.y, rect2.width, rect2.height);
+
             GUI.BeginGroup(position);
             Text.Font = GameFont.Small;
             GUI.color = Color.white;
+
             Rect outRect = new Rect(0f, 0f, position.width, position.height - CEAreaHeight);
             Rect viewRect = new Rect(0f, 0f, position.width - UniversalMargin * 2, scrollViewHeight);
             Widgets.BeginScrollView(outRect, ref this.scrollPosition, viewRect, true);
+
             float num = 0f;
-            if (!viewlist)
-            {
-                if (this.SelPawnForGear.RaceProps.Humanlike)
-                {
-                    Rect rectstat = new Rect(374f, 0f, 128f, 50f);
-                    this.TryDrawMassInfo1(rectstat);
-                    this.TryDrawComfyTemperatureRange1(rectstat);
-                }
-                else
-                {
-                    this.TryDrawMassInfo(ref num, viewRect.width);
-                    this.TryDrawComfyTemperatureRange(ref num, viewRect.width);
-                }
-            }
-            else if (viewlist)
-            {
-                this.TryDrawMassInfo(ref num, viewRect.width);
-                this.TryDrawComfyTemperatureRange(ref num, viewRect.width);
-            }
-            if (this.ShouldShowOverallArmor(this.SelPawnForGear) && !viewlist && this.SelPawnForGear.RaceProps.Humanlike)
+
+            Rect rectstat = new Rect(374f, 0f, 128f, 50f);
+            this.TryDrawMassInfo1(rectstat);
+            this.TryDrawComfyTemperatureRange1(rectstat);
+
+            if (this.ShouldShowOverallArmor(this.SelPawnForGear))
             {
                 Rect rectarmor = new Rect(374f, 84f, 128f, 85f);
                 TooltipHandler.TipRegion(rectarmor, "OverallArmor".Translate());
@@ -136,14 +126,8 @@ namespace Sandy_Detailed_RPG_Inventory
                 this.TryDrawOverallArmor1(rectheat, StatDefOf.ArmorRating_Heat, "ArmorHeat".Translate(),
                                          ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorHeat_Icon", true));
             }
-            else if (this.ShouldShowOverallArmor(this.SelPawnForGear))
-            {
-                Widgets.ListSeparator(ref num, viewRect.width, "OverallArmor".Translate());
-                this.TryDrawOverallArmor(ref num, viewRect.width, StatDefOf.ArmorRating_Sharp, "ArmorSharp".Translate());
-                this.TryDrawOverallArmor(ref num, viewRect.width, StatDefOf.ArmorRating_Blunt, "ArmorBlunt".Translate());
-                this.TryDrawOverallArmor(ref num, viewRect.width, StatDefOf.ArmorRating_Heat, "ArmorHeat".Translate());
-            }
-            if (this.IsVisible && this.SelPawnForGear.RaceProps.Humanlike && !viewlist)
+
+            if (this.IsVisible)
             {
                 //Hats
                 Rect newRect1 = new Rect(150f, 0f, 64f, 64f);
@@ -181,7 +165,8 @@ namespace Sandy_Detailed_RPG_Inventory
                 Rect PawnRect = new Rect(374f, 172f, 128f, 128f);
                 this.DrawColonist(PawnRect, this.SelPawnForGear);
             }
-            if (this.ShouldShowEquipment(this.SelPawnForGear) && !viewlist && this.SelPawnForGear.RaceProps.Humanlike)
+
+            if (this.ShouldShowEquipment(this.SelPawnForGear))
             {
                 foreach (ThingWithComps current in this.SelPawnForGear.equipment.AllEquipmentListForReading)
                 {
@@ -197,7 +182,7 @@ namespace Sandy_Detailed_RPG_Inventory
                             TooltipHandler.TipRegion(rect6, "BrawlerHasRangedWeapon".Translate());
                         }
                     }
-                    if (current != this.SelPawnForGear.equipment.Primary)
+                    else 
                     {
                         Rect newRect1 = new Rect(406f, 370f, 64f, 64f);
                         GUI.DrawTexture(newRect1, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
@@ -211,15 +196,8 @@ namespace Sandy_Detailed_RPG_Inventory
                     }
                 }
             }
-            else if (this.ShouldShowEquipment(this.SelPawnForGear))
-            {
-                Widgets.ListSeparator(ref num, viewRect.width, "Equipment".Translate());
-                foreach (ThingWithComps thing in this.SelPawnForGear.equipment.AllEquipmentListForReading)
-                {
-                    this.DrawThingRow(ref num, viewRect.width, thing, false);
-                }
-            }
-            if (this.ShouldShowApparel(this.SelPawnForGear) && !viewlist && this.SelPawnForGear.RaceProps.Humanlike)
+
+            if (this.ShouldShowApparel(this.SelPawnForGear))
             {
                 foreach (Apparel current2 in this.SelPawnForGear.apparel.WornApparel)
                 {
@@ -475,26 +453,10 @@ namespace Sandy_Detailed_RPG_Inventory
                     */
                 }
             }
-            else if (this.ShouldShowApparel(this.SelPawnForGear))
-            {
-                Widgets.ListSeparator(ref num, viewRect.width, "Apparel".Translate());
-                foreach (Apparel thing2 in from ap in this.SelPawnForGear.apparel.WornApparel
-                orderby ap.def.apparel.bodyPartGroups[0].listOrder descending
-                select ap)
-                {
-                    this.DrawThingRow(ref num, viewRect.width, thing2, false);
-                }
-            }
+
             if (this.ShouldShowInventory(this.SelPawnForGear))
             {
-                if (this.SelPawnForGear.RaceProps.Humanlike && !viewlist)
-                {
-                    num = 440f;
-                }
-                else if (!this.SelPawnForGear.RaceProps.Humanlike && !viewlist)
-                {
-                    num = 44f;
-                }
+                num = 440f;
                 Widgets.ListSeparator(ref num, viewRect.width, "Inventory".Translate());
                 Sandy_Detailed_RPG_GearTab.workingInvList.Clear();
                 Sandy_Detailed_RPG_GearTab.workingInvList.AddRange(this.SelPawnForGear.inventory.innerContainer);
@@ -777,69 +739,6 @@ namespace Sandy_Detailed_RPG_Inventory
             }
             TooltipHandler.TipRegion(rect, text2);
             y += 28f;
-        }
-
-        private void TryDrawOverallArmor(ref float curY, float width, StatDef stat, string label)
-        {
-            float num = 0f;
-            float num2 = Mathf.Clamp01(this.SelPawnForGear.GetStatValue(stat, true) / 2f);
-            List<BodyPartRecord> allParts = this.SelPawnForGear.RaceProps.body.AllParts;
-            List<Apparel> list = (this.SelPawnForGear.apparel == null) ? null : this.SelPawnForGear.apparel.WornApparel;
-            for (int i = 0; i < allParts.Count; i++)
-            {
-                float num3 = 1f - num2;
-                if (list != null)
-                {
-                    for (int j = 0; j < list.Count; j++)
-                    {
-                        if (list[j].def.apparel.CoversBodyPart(allParts[i]))
-                        {
-                            float num4 = Mathf.Clamp01(list[j].GetStatValue(stat, true) / 2f);
-                            num3 *= 1f - num4;
-                        }
-                    }
-                }
-                num += allParts[i].coverageAbs * (1f - num3);
-            }
-            num = Mathf.Clamp(num * 2f, 0f, 2f);
-            Rect rect = new Rect(0f, curY, width, 100f);
-            Widgets.Label(rect, label.Truncate(120f, null));
-            rect.xMin += 120f;
-            Widgets.Label(rect, num.ToStringPercent());
-            curY += 22f;
-        }
-        
-        private void TryDrawMassInfo(ref float curY, float width)
-        {
-            if (this.SelPawnForGear.Dead || !this.ShouldShowInventory(this.SelPawnForGear))
-            {
-                return;
-            }
-            Rect rect = new Rect(0f, curY, width, 22f);
-            float num = MassUtility.GearAndInventoryMass(this.SelPawnForGear);
-            float num2 = MassUtility.Capacity(this.SelPawnForGear, null);
-            Widgets.Label(rect, "MassCarried".Translate(num.ToString("0.##"), num2.ToString("0.##")));
-            curY += 22f;
-        }
-
-        private void TryDrawComfyTemperatureRange(ref float curY, float width)
-        {
-            if (this.SelPawnForGear.Dead)
-            {
-                return;
-            }
-            Rect rect = new Rect(0f, curY, width, 22f);
-            float statValue = this.SelPawnForGear.GetStatValue(StatDefOf.ComfyTemperatureMin, true);
-            float statValue2 = this.SelPawnForGear.GetStatValue(StatDefOf.ComfyTemperatureMax, true);
-            Widgets.Label(rect, string.Concat(new string[]
-            {
-                "ComfyTemperatureRange".Translate(),
-                ": ",
-                statValue.ToStringTemperature("F0"),
-                " ~ ",
-                statValue2.ToStringTemperature("F0")
-            }));
-            curY += 22f;
         }
 
         // xShift: how much to right to adjust the two bars

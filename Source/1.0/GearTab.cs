@@ -52,14 +52,13 @@ namespace Sandy_Detailed_RPG_Inventory
 
         // RPG inventory GUI consts
         private const float UniversalMargin = 10f;
+        private const float SmallIconSize = 24f;
+        private const float SmallIconMargin = 2f;
 
         private const float CheckboxHeight = 20f;
-
         private const float CEAreaHeight = 60f;
 
-        private const float SmallIconSize = 24f;
-
-        private const float SmallIconMargin = 2f;
+        private const float statBoxWidth = 128f;
 
         // Used too many times per tick; keep only one instance and only Get it once to
         // save 80 microsec (-10% time) per tick.
@@ -138,23 +137,26 @@ namespace Sandy_Detailed_RPG_Inventory
             float num = 0f;
 
             Vector2 statStart = new Vector2(374f, 0f);
-            this.DrawMassInfo(statStart);
+            DrawMassInfo(statStart);
             statStart.Set(statStart.x, statStart.y + SmallIconSize + SmallIconMargin);
-            this.DrawComfyTemperatureRange(statStart);
+            DrawComfyTemperatureRange(statStart);
 
-            // Don't check if should show armor for pawn. Being humanlike is suffice to show armor, and the pawn
-            // must be humanlike at this point.
-            Rect rectarmor = new Rect(374f, 84f, 128f, 85f);
-            TooltipHandler.TipRegion(rectarmor, "OverallArmor".Translate());
-            Rect rectsharp = new Rect(rectarmor.x, rectarmor.y, rectarmor.width, 27f);
-            this.TryDrawOverallArmor1(rectsharp, StatDefOf.ArmorRating_Sharp, "ArmorSharp".Translate(),
-                                        ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorSharp_Icon", true));
-            Rect rectblunt = new Rect(rectarmor.x, rectarmor.y + 30f, rectarmor.width, 27f);
-            this.TryDrawOverallArmor1(rectblunt, StatDefOf.ArmorRating_Blunt, "ArmorBlunt".Translate(),
-                                        ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorBlunt_Icon", true));
-            Rect rectheat = new Rect(rectarmor.x, rectarmor.y + 60f, rectarmor.width, 27f);
-            this.TryDrawOverallArmor1(rectheat, StatDefOf.ArmorRating_Heat, "ArmorHeat".Translate(),
-                                        ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorHeat_Icon", true));
+            // Don't check if should show armor for pawn. Being humanlike is suffice to show
+            // armor, and the pawn must be humanlike at this point.
+            Rect armorRect = new Rect(374f, 3 * (SmallIconSize + SmallIconMargin) + 6f,
+                statBoxWidth, 3 * SmallIconSize + 4 * SmallIconMargin);
+            TooltipHandler.TipRegion(armorRect, "OverallArmor".Translate());
+            Rect rectsharp = new Rect(armorRect.x, armorRect.y, armorRect.width, SmallIconSize);
+            DrawOverallArmor(rectsharp, StatDefOf.ArmorRating_Sharp, "ArmorSharp".Translate(),
+                ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorSharp_Icon"));
+            Rect rectblunt = new Rect(armorRect.x, armorRect.y + SmallIconSize + 2 * SmallIconMargin,
+                armorRect.width, SmallIconSize);
+            DrawOverallArmor(rectblunt, StatDefOf.ArmorRating_Blunt, "ArmorBlunt".Translate(),
+                ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorBlunt_Icon"));
+            Rect rectheat = new Rect(armorRect.x, armorRect.y + 2 * (SmallIconSize + 2 * SmallIconMargin),
+                armorRect.width, SmallIconSize);
+            DrawOverallArmor(rectheat, StatDefOf.ArmorRating_Heat, "ArmorHeat".Translate(),
+                ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorHeat_Icon"));
 
             if (this.IsVisible)
             {
@@ -624,8 +626,48 @@ namespace Sandy_Detailed_RPG_Inventory
             TooltipHandler.TipRegion(rect, text3);
         }
 
-        private void TryDrawOverallArmor1(Rect rect, StatDef stat, string label, Texture image)
+        private void DrawMassInfo(Vector2 topLeft)
         {
+            if (SelPawnForGear.Dead || !ShouldShowInventory(SelPawnForGear))
+            {
+                return;
+            }
+            Rect iconRect = new Rect(topLeft.x, topLeft.y, SmallIconSize, SmallIconSize);
+            GUI.DrawTexture(iconRect, ContentFinder<Texture2D>.Get("UI/Icons/Sandy_MassCarried_Icon", true));
+            TooltipHandler.TipRegion(iconRect, "SandyMassCarried".Translate());
+
+            float mass = MassUtility.GearAndInventoryMass(SelPawnForGear);
+            float capacity = MassUtility.Capacity(SelPawnForGear, null);
+            // No clue where that 6px come from. Arbitrary I guess.
+            Rect textRect = new Rect(topLeft.x + SmallIconSize + 6f, topLeft.y + SmallIconMargin, statBoxWidth - SmallIconSize, SmallIconSize);
+            Widgets.Label(textRect, "SandyMassValue".Translate(mass.ToString("0.##"), capacity.ToString("0.##")));
+        }
+
+        private void DrawComfyTemperatureRange(Vector2 topLeft)
+        {
+            if (this.SelPawnForGear.Dead)
+            {
+                return;
+            }
+            Rect iconRect = new Rect(topLeft.x, topLeft.y, SmallIconSize, SmallIconSize);
+            GUI.DrawTexture(iconRect, ContentFinder<Texture2D>.Get("UI/Icons/Min_Temperature"));
+            TooltipHandler.TipRegion(iconRect, "ComfyTemperatureRange".Translate());
+            float statValue = SelPawnForGear.GetStatValue(StatDefOf.ComfyTemperatureMin);
+            // No clue where that 6px come from. Arbitrary I guess.
+            Rect textRect = new Rect(topLeft.x + SmallIconSize + 6f, topLeft.y + SmallIconMargin, statBoxWidth - SmallIconSize, SmallIconSize);
+            Widgets.Label(textRect, " " + statValue.ToStringTemperature("F0"));
+
+            iconRect.Set(iconRect.x, iconRect.y + SmallIconSize + SmallIconMargin, SmallIconSize, SmallIconSize);
+            GUI.DrawTexture(iconRect, ContentFinder<Texture2D>.Get("UI/Icons/Max_Temperature"));
+            TooltipHandler.TipRegion(iconRect, "ComfyTemperatureRange".Translate());
+            statValue = SelPawnForGear.GetStatValue(StatDefOf.ComfyTemperatureMax);
+            textRect.Set(textRect.x, textRect.y + SmallIconSize + SmallIconMargin, statBoxWidth - SmallIconSize, SmallIconSize);
+            Widgets.Label(textRect, " " + statValue.ToStringTemperature("F0"));
+        }
+
+        private void DrawOverallArmor(Rect rect, StatDef stat, string label, Texture image)
+        {
+            // Dark magic from vanilla code calculating armor value until the blank line.
             float num = 0f;
             float num2 = Mathf.Clamp01(this.SelPawnForGear.GetStatValue(stat, true) / 2f);
             List<BodyPartRecord> allParts = this.SelPawnForGear.RaceProps.body.AllParts;
@@ -647,48 +689,13 @@ namespace Sandy_Detailed_RPG_Inventory
                 num += allParts[i].coverageAbs * (1f - num3);
             }
             num = Mathf.Clamp(num * 2f, 0f, 2f);
-            Rect rect1 = new Rect(rect.x, rect.y, SmallIconSize, SmallIconSize);
-            GUI.DrawTexture(rect1, image);
-            TooltipHandler.TipRegion(rect1, label);
-            Rect rect2 = new Rect(rect.x + 60f, rect.y + 3f, 104f, SmallIconSize);
-            Widgets.Label(rect2, num.ToStringPercent());
-        }
 
-        private void DrawMassInfo(Vector2 topLeft)
-        {
-            if (SelPawnForGear.Dead || !ShouldShowInventory(SelPawnForGear))
-            {
-                return;
-            }
-            Rect iconRect = new Rect(topLeft.x, topLeft.y, SmallIconSize, SmallIconSize);
-            GUI.DrawTexture(iconRect, ContentFinder<Texture2D>.Get("UI/Icons/Sandy_MassCarried_Icon", true));
-            TooltipHandler.TipRegion(iconRect, "SandyMassCarried".Translate());
-
-            float mass = MassUtility.GearAndInventoryMass(SelPawnForGear);
-            float capacity = MassUtility.Capacity(SelPawnForGear, null);
-            Rect textRect = new Rect(topLeft.x + SmallIconSize + 6f, topLeft.y + SmallIconMargin, 104f, SmallIconSize);
-            Widgets.Label(textRect, "SandyMassValue".Translate(mass.ToString("0.##"), capacity.ToString("0.##")));
-        }
-
-        private void DrawComfyTemperatureRange(Vector2 topLeft)
-        {
-            if (this.SelPawnForGear.Dead)
-            {
-                return;
-            }
-            Rect iconRect = new Rect(topLeft.x, topLeft.y, SmallIconSize, SmallIconSize);
-            GUI.DrawTexture(iconRect, ContentFinder<Texture2D>.Get("UI/Icons/Min_Temperature"));
-            TooltipHandler.TipRegion(iconRect, "ComfyTemperatureRange".Translate());
-            float statValue = SelPawnForGear.GetStatValue(StatDefOf.ComfyTemperatureMin);
-            Rect textRect = new Rect(topLeft.x + SmallIconSize + 6f, topLeft.y + SmallIconMargin, 104f, SmallIconSize);
-            Widgets.Label(textRect, " " + statValue.ToStringTemperature("F0"));
-
-            iconRect.Set(iconRect.x, iconRect.y + SmallIconSize + SmallIconMargin, SmallIconSize, SmallIconSize);
-            GUI.DrawTexture(iconRect, ContentFinder<Texture2D>.Get("UI/Icons/Max_Temperature"));
-            TooltipHandler.TipRegion(iconRect, "ComfyTemperatureRange".Translate());
-            statValue = SelPawnForGear.GetStatValue(StatDefOf.ComfyTemperatureMax);
-            textRect.Set(textRect.x, textRect.y + SmallIconSize + SmallIconMargin, 104f, SmallIconSize);
-            Widgets.Label(textRect, " " + statValue.ToStringTemperature("F0"));
+            Rect iconRect = new Rect(rect.x, rect.y, SmallIconSize, SmallIconSize);
+            GUI.DrawTexture(iconRect, image);
+            TooltipHandler.TipRegion(iconRect, label);
+            // the 36px can make the percentage number look like it is centered in the field. Brilliant Sandy.
+            Rect valRect = new Rect(rect.x + SmallIconSize + 36f, rect.y + SmallIconMargin, statBoxWidth - SmallIconSize, SmallIconSize);
+            Widgets.Label(valRect, num.ToStringPercent());
         }
 
         // xShift: how much to right to adjust the two bars

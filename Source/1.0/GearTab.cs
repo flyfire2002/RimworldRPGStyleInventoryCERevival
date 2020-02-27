@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using RimWorld;
 using RimWorld.Planet;
@@ -11,8 +12,32 @@ using CombatExtended;
 
 namespace Sandy_Detailed_RPG_Inventory
 {
+    class Benchmarker
+    {
+        Stopwatch stopwatch = new Stopwatch();
+        private long nanoPerTick = (1000L * 1000L * 1000L) / Stopwatch.Frequency;
+        private float avg = 0f;
+        private float count = 0f;
+
+        public void Start()
+        {
+            stopwatch.Start();
+        }
+
+        public void Stop()
+        {
+            stopwatch.Stop();
+            var us = stopwatch.ElapsedTicks * nanoPerTick / 1000f;
+            avg = avg + (us - avg) / (count += 1f);
+            Log.Message($"Curr: {us}us; Avg: {avg}us over {count}");
+            stopwatch.Reset();
+        }
+    }
+
     public class Sandy_Detailed_RPG_GearTab : ITab_Pawn_Gear
     {
+        private Benchmarker benchmarker = new Benchmarker();
+
         private Vector2 scrollPosition = Vector2.zero;
 
         private float scrollViewHeight;
@@ -20,19 +45,25 @@ namespace Sandy_Detailed_RPG_Inventory
         // DrawColonist consts
         public static readonly Vector3 PawnTextureCameraOffset = new Vector3(0f, 0f, 0f);
 
-        // Inventory list consts
-        private const float ThingLeftX = 36f;
-
+        // Inventory list vars
         private static List<Thing> workingInvList = new List<Thing>();
 
         public static readonly new Color HighlightColor = new Color(0.5f, 0.5f, 0.5f, 1f);
 
-        // RPG inventory area consts
+        // RPG inventory GUI consts
         private const float UniversalMargin = 10f;
 
         private const float CheckboxHeight = 20f;
 
         private const float CEAreaHeight = 60f;
+
+        private const float SmallIconSize = 24f;
+
+        private const float SmallIconMargin = 2f;
+
+        // Used too many times per tick; keep only one instance and only Get it once to
+        // save 80 microsec (-10% time) per tick.
+        private static Texture2D itemBackground;
 
         #region CE_Field
         private const float _barHeight = 20f;
@@ -50,20 +81,21 @@ namespace Sandy_Detailed_RPG_Inventory
 
         public Sandy_Detailed_RPG_GearTab()
         {
-            this.size = new Vector2(550f, 500f);
-            this.labelKey = "TabGear";
-            this.tutorTag = "Gear";
+            size = new Vector2(550f, 500f);
+            labelKey = "TabGear";
+            tutorTag = "Gear";
         }
 
         protected override void FillTab()
         {
+            benchmarker.Start();
             Text.Font = GameFont.Small;
             Rect checkBox = new Rect(CheckboxHeight, 0f, 100f, 30f);
             Widgets.CheckboxLabeled(checkBox, "Sandy_ViewList".Translate(), ref viewlist, false, null, null, false);
 
             // Delegate to vanilla Filltab (sans drawing CE loadout bars) if show as list is chosen, or if the pawn is not human
             // (e.g. muffalo with cargo)
-            if (viewlist || !this.SelPawnForGear.RaceProps.Humanlike)
+            if (viewlist || !SelPawnForGear.RaceProps.Humanlike)
             {
                 // Set an enclosing GUI group that contains the group from base.FillTab
                 // and the CE loadout bar.
@@ -85,8 +117,12 @@ namespace Sandy_Detailed_RPG_Inventory
                 GUI.EndGroup();
                 GUI.color = Color.white;
                 Text.Anchor = TextAnchor.UpperLeft;
+                benchmarker.Stop();
                 return;
             }
+
+            if (itemBackground == null) itemBackground = ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG");
+
             Rect rect = new Rect(0f, CheckboxHeight, size.x, size.y - CheckboxHeight);
             Rect rect2 = rect.ContractedBy(UniversalMargin);
             Rect position = new Rect(rect2.x, rect2.y, rect2.width, rect2.height);
@@ -97,59 +133,59 @@ namespace Sandy_Detailed_RPG_Inventory
 
             Rect outRect = new Rect(0f, 0f, position.width, position.height - CEAreaHeight);
             Rect viewRect = new Rect(0f, 0f, position.width - UniversalMargin * 2, scrollViewHeight);
-            Widgets.BeginScrollView(outRect, ref this.scrollPosition, viewRect, true);
+            Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
 
             float num = 0f;
 
-            Rect rectstat = new Rect(374f, 0f, 128f, 50f);
-            this.TryDrawMassInfo1(rectstat);
-            this.TryDrawComfyTemperatureRange1(rectstat);
+            Vector2 statStart = new Vector2(374f, 0f);
+            this.DrawMassInfo(statStart);
+            statStart.Set(statStart.x, statStart.y + SmallIconSize + SmallIconMargin);
+            this.DrawComfyTemperatureRange(statStart);
 
-            if (this.ShouldShowOverallArmor(this.SelPawnForGear))
-            {
-                Rect rectarmor = new Rect(374f, 84f, 128f, 85f);
-                TooltipHandler.TipRegion(rectarmor, "OverallArmor".Translate());
-                Rect rectsharp = new Rect(rectarmor.x, rectarmor.y, rectarmor.width, 27f);
-                this.TryDrawOverallArmor1(rectsharp, StatDefOf.ArmorRating_Sharp, "ArmorSharp".Translate(),
-                                         ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorSharp_Icon", true));
-                Rect rectblunt = new Rect(rectarmor.x, rectarmor.y + 30f, rectarmor.width, 27f);
-                this.TryDrawOverallArmor1(rectblunt, StatDefOf.ArmorRating_Blunt, "ArmorBlunt".Translate(),
-                                         ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorBlunt_Icon", true));
-                Rect rectheat = new Rect(rectarmor.x, rectarmor.y + 60f, rectarmor.width, 27f);
-                this.TryDrawOverallArmor1(rectheat, StatDefOf.ArmorRating_Heat, "ArmorHeat".Translate(),
-                                         ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorHeat_Icon", true));
-            }
+            // Don't check if should show armor for pawn. Being humanlike is suffice to show armor, and the pawn
+            // must be humanlike at this point.
+            Rect rectarmor = new Rect(374f, 84f, 128f, 85f);
+            TooltipHandler.TipRegion(rectarmor, "OverallArmor".Translate());
+            Rect rectsharp = new Rect(rectarmor.x, rectarmor.y, rectarmor.width, 27f);
+            this.TryDrawOverallArmor1(rectsharp, StatDefOf.ArmorRating_Sharp, "ArmorSharp".Translate(),
+                                        ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorSharp_Icon", true));
+            Rect rectblunt = new Rect(rectarmor.x, rectarmor.y + 30f, rectarmor.width, 27f);
+            this.TryDrawOverallArmor1(rectblunt, StatDefOf.ArmorRating_Blunt, "ArmorBlunt".Translate(),
+                                        ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorBlunt_Icon", true));
+            Rect rectheat = new Rect(rectarmor.x, rectarmor.y + 60f, rectarmor.width, 27f);
+            this.TryDrawOverallArmor1(rectheat, StatDefOf.ArmorRating_Heat, "ArmorHeat".Translate(),
+                                        ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorHeat_Icon", true));
 
             if (this.IsVisible)
             {
                 //Hats
                 Rect newRect1 = new Rect(150f, 0f, 64f, 64f);
-                GUI.DrawTexture(newRect1, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                GUI.DrawTexture(newRect1, itemBackground);
                 Rect tipRect1 = newRect1.ContractedBy(12f);
                 TooltipHandler.TipRegion(tipRect1, "Sandy_Head".Translate());
                 //Vests
                 Rect newRect2 = new Rect(76f, 148f, 64f, 64f);
-                GUI.DrawTexture(newRect2, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                GUI.DrawTexture(newRect2, itemBackground);
                 Rect tipRect2 = newRect2.ContractedBy(12f);
                 TooltipHandler.TipRegion(tipRect2, "Sandy_TorsoMiddle".Translate());
                 //Shirts
                 Rect newRect3 = new Rect(150f, 148f, 64f, 64f);
-                GUI.DrawTexture(newRect3, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                GUI.DrawTexture(newRect3, itemBackground);
                 Rect tipRect3 = newRect3.ContractedBy(12f);
                 TooltipHandler.TipRegion(tipRect3, "Sandy_TorsoOnSkin".Translate());
                 //Dusters
                 Rect newRect4 = new Rect(224f, 148f, 64f, 64f);
-                GUI.DrawTexture(newRect4, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                GUI.DrawTexture(newRect4, itemBackground);
                 Rect tipRect4 = newRect4.ContractedBy(12f);
                 TooltipHandler.TipRegion(tipRect4, "Sandy_TorsoShell".Translate());
                 //Belts
                 Rect newRect5 = new Rect(150f, 222f, 64f, 64f);
-                GUI.DrawTexture(newRect5, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                GUI.DrawTexture(newRect5, itemBackground);
                 Rect tipRect5 = newRect5.ContractedBy(12f);
                 TooltipHandler.TipRegion(tipRect5, "Sandy_Belt".Translate());
                 //Pants
                 Rect newRect6 = new Rect(150f, 296f, 64f, 64f);
-                GUI.DrawTexture(newRect6, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                GUI.DrawTexture(newRect6, itemBackground);
                 Rect tipRect6 = newRect6.ContractedBy(12f);
                 TooltipHandler.TipRegion(tipRect6, "Sandy_Pants".Translate());
                 Color color = new Color(1f, 1f, 1f, 1f);
@@ -166,7 +202,7 @@ namespace Sandy_Detailed_RPG_Inventory
                     if (current == this.SelPawnForGear.equipment.Primary)
                     {
                         Rect newRect = new Rect(406f, 296f, 64f, 64f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current, false);
                         if (this.SelPawnForGear.story.traits.HasTrait(TraitDefOf.Brawler) && this.SelPawnForGear.equipment.Primary != null && this.SelPawnForGear.equipment.Primary.def.IsRangedWeapon)
                         {
@@ -178,7 +214,7 @@ namespace Sandy_Detailed_RPG_Inventory
                     else 
                     {
                         Rect newRect1 = new Rect(406f, 370f, 64f, 64f);
-                        GUI.DrawTexture(newRect1, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect1, itemBackground);
                         this.DrawThingRow1(newRect1, current, false);
                         if (this.SelPawnForGear.story.traits.HasTrait(TraitDefOf.Brawler) && this.SelPawnForGear.equipment.Primary != null && current.def.IsRangedWeapon)
                         {
@@ -211,14 +247,14 @@ namespace Sandy_Detailed_RPG_Inventory
                         && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead))
                     {
                         Rect newRect = new Rect(224f, 0f, 64f, 64f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Teeth) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.UpperHead)
                         && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Eyes))
                     {
                         Rect newRect = new Rect(76f, 0f, 64f, 64f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //Torso
@@ -247,14 +283,14 @@ namespace Sandy_Detailed_RPG_Inventory
                     else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Waist) && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell))
                     {
                         Rect newRect = new Rect(224f, 222f, 64f, 64f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //Legs
                     else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Legs) && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle))
                     {
                         Rect newRect = new Rect(76f, 296f, 64f, 64f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Legs) && current2.def.apparel.layers.Contains(ApparelLayerDefOf.OnSkin))
@@ -265,7 +301,7 @@ namespace Sandy_Detailed_RPG_Inventory
                     else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Legs) && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell))
                     {
                         Rect newRect = new Rect(224f, 296f, 64f, 64f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //Feet
@@ -273,21 +309,21 @@ namespace Sandy_Detailed_RPG_Inventory
                         && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle))
                     {
                         Rect newRect = new Rect(76f, 370f, 64f, 64f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Feet) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Legs)
                         && current2.def.apparel.layers.Contains(ApparelLayerDefOf.OnSkin))
                     {
                         Rect newRect = new Rect(150f, 370f, 64f, 64f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Feet) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Legs)
                         && (current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell) || current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead)))
                     {
                         Rect newRect = new Rect(224f, 370f, 64f, 64f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //Hands
@@ -295,7 +331,7 @@ namespace Sandy_Detailed_RPG_Inventory
                         && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
                     {
                         Rect newRect = new Rect(10f, 126f, 56f, 56f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
@@ -303,14 +339,14 @@ namespace Sandy_Detailed_RPG_Inventory
                         && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
                     {
                         Rect newRect = new Rect(10f, 63f, 56f, 56f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
                         && current2.def.apparel.layers.Contains(ApparelLayerDefOf.OnSkin) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
                     {
                         Rect newRect = new Rect(10f, 189f, 56f, 56f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //Shoulders
@@ -319,7 +355,7 @@ namespace Sandy_Detailed_RPG_Inventory
                         && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand))
                     {
                         Rect newRect = new Rect(298f, 189f, 56f, 56f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell)
@@ -327,7 +363,7 @@ namespace Sandy_Detailed_RPG_Inventory
                         && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand))
                     {
                         Rect newRect = new Rect(298f, 126f, 56f, 56f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell)
@@ -336,7 +372,7 @@ namespace Sandy_Detailed_RPG_Inventory
                         && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand))
                     {
                         Rect newRect = new Rect(298f, 63f, 56f, 56f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //RightHand
@@ -345,14 +381,14 @@ namespace Sandy_Detailed_RPG_Inventory
                         && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell))
                     {
                         Rect newRect = new Rect(298f, 315f, 56f, 56f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
                         && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
                     {
                         Rect newRect = new Rect(298f, 378f, 56f, 56f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
@@ -360,7 +396,7 @@ namespace Sandy_Detailed_RPG_Inventory
                         && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle) && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell))
                     {
                         Rect newRect = new Rect(298f, 252f, 56f, 56f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //LeftHand
@@ -369,14 +405,14 @@ namespace Sandy_Detailed_RPG_Inventory
                         && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell))
                     {
                         Rect newRect = new Rect(10f, 315f, 56f, 56f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
                         && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
                     {
                         Rect newRect = new Rect(10f, 378f, 56f, 56f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
@@ -384,7 +420,7 @@ namespace Sandy_Detailed_RPG_Inventory
                         && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle) && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell))
                     {
                         Rect newRect = new Rect(10f, 252f, 56f, 56f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //Neck
@@ -392,21 +428,21 @@ namespace Sandy_Detailed_RPG_Inventory
                              && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Belt) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
                     {
                         Rect newRect = new Rect(76f, 74f, 64f, 64f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Neck) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders)
                              && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
                     {
                         Rect newRect = new Rect(150f, 74f, 64f, 64f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Neck) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders)
                              && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
                     {
                         Rect newRect = new Rect(224f, 74f, 64f, 64f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
 
@@ -415,19 +451,19 @@ namespace Sandy_Detailed_RPG_Inventory
                     else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Neck) && (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Accessories)))
                     {
                         Rect newRect = new Rect(76f, 74f, 64f, 64f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Ears) && (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Accessories)))
                     {
                         Rect newRect = new Rect(298f, 0f, 56f, 56f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand) && (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Accessories)))
                     {
                         Rect newRect = new Rect(10f, 0f, 56f, 56f);
-                        GUI.DrawTexture(newRect, ContentFinder<Texture2D>.Get("UI/Widgets/DesButBG", true));
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     /* Could be the code for ammo vests and backpack 
@@ -447,18 +483,17 @@ namespace Sandy_Detailed_RPG_Inventory
                 }
             }
 
-            if (this.ShouldShowInventory(this.SelPawnForGear))
+            // Do not check if should show (text) inventory for pawn; the pawn being humanlike is suffice, and
+            // at this point the pawn must be humanlike.
+            num = 440f;
+            Widgets.ListSeparator(ref num, viewRect.width, "Inventory".Translate());
+            Sandy_Detailed_RPG_GearTab.workingInvList.Clear();
+            Sandy_Detailed_RPG_GearTab.workingInvList.AddRange(this.SelPawnForGear.inventory.innerContainer);
+            for (int i = 0; i < Sandy_Detailed_RPG_GearTab.workingInvList.Count; i++)
             {
-                num = 440f;
-                Widgets.ListSeparator(ref num, viewRect.width, "Inventory".Translate());
-                Sandy_Detailed_RPG_GearTab.workingInvList.Clear();
-                Sandy_Detailed_RPG_GearTab.workingInvList.AddRange(this.SelPawnForGear.inventory.innerContainer);
-                for (int i = 0; i < Sandy_Detailed_RPG_GearTab.workingInvList.Count; i++)
-                {
-                    this.DrawThingRow(ref num, viewRect.width, Sandy_Detailed_RPG_GearTab.workingInvList[i], true);
-                }
-                Sandy_Detailed_RPG_GearTab.workingInvList.Clear();
+                this.DrawThingRow(ref num, viewRect.width, Sandy_Detailed_RPG_GearTab.workingInvList[i], true);
             }
+            Sandy_Detailed_RPG_GearTab.workingInvList.Clear();
 
             if (Event.current.type == EventType.Layout)
             {
@@ -470,6 +505,7 @@ namespace Sandy_Detailed_RPG_Inventory
             GUI.EndGroup();
             GUI.color = Color.white;
             Text.Anchor = TextAnchor.UpperLeft;
+            benchmarker.Stop();
         }
 
         private void DrawColonist(Rect rect, Pawn pawn)
@@ -547,7 +583,7 @@ namespace Sandy_Detailed_RPG_Inventory
                 Widgets.InfoCardButton(rect.x, rect.y, thing);
                 if (this.CanControl && (inventory || this.CanControlColonist || (this.SelPawnForGear.Spawned && !this.SelPawnForGear.Map.IsPlayerHome)))
                 {
-                    Rect rect2 = new Rect(rect.xMax - 24f, rect.y, 24f, 24f);
+                    Rect rect2 = new Rect(rect.xMax - SmallIconSize, rect.y, SmallIconSize, SmallIconSize);
                     TooltipHandler.TipRegion(rect2, "DropThing".Translate());
                     if (Widgets.ButtonImage(rect2, ContentFinder<Texture2D>.Get("UI/Buttons/Drop", true)))
                     {
@@ -611,127 +647,48 @@ namespace Sandy_Detailed_RPG_Inventory
                 num += allParts[i].coverageAbs * (1f - num3);
             }
             num = Mathf.Clamp(num * 2f, 0f, 2f);
-            Rect rect1 = new Rect(rect.x, rect.y, 24f, 27f);
+            Rect rect1 = new Rect(rect.x, rect.y, SmallIconSize, SmallIconSize);
             GUI.DrawTexture(rect1, image);
             TooltipHandler.TipRegion(rect1, label);
-            Rect rect2 = new Rect(rect.x + 60f, rect.y + 3f, 104f, 24f);
+            Rect rect2 = new Rect(rect.x + 60f, rect.y + 3f, 104f, SmallIconSize);
             Widgets.Label(rect2, num.ToStringPercent());
         }
 
-        private void TryDrawMassInfo1(Rect rect)
+        private void DrawMassInfo(Vector2 topLeft)
         {
-            if (this.SelPawnForGear.Dead || !this.ShouldShowInventory(this.SelPawnForGear))
+            if (SelPawnForGear.Dead || !ShouldShowInventory(SelPawnForGear))
             {
                 return;
             }
-            Rect rect1 = new Rect(rect.x, rect.y, 24f, 24f);
-            GUI.DrawTexture(rect1, ContentFinder<Texture2D>.Get("UI/Icons/Sandy_MassCarried_Icon", true));
-            TooltipHandler.TipRegion(rect1, "SandyMassCarried".Translate());
-            float num = MassUtility.GearAndInventoryMass(this.SelPawnForGear);
-            float num2 = MassUtility.Capacity(this.SelPawnForGear, null);
-            Rect rect2 = new Rect(rect.x + 30f, rect.y + 2f, 104f, 24f);
-            Widgets.Label(rect2, "SandyMassValue".Translate(num.ToString("0.##"), num2.ToString("0.##")));
+            Rect iconRect = new Rect(topLeft.x, topLeft.y, SmallIconSize, SmallIconSize);
+            GUI.DrawTexture(iconRect, ContentFinder<Texture2D>.Get("UI/Icons/Sandy_MassCarried_Icon", true));
+            TooltipHandler.TipRegion(iconRect, "SandyMassCarried".Translate());
+
+            float mass = MassUtility.GearAndInventoryMass(SelPawnForGear);
+            float capacity = MassUtility.Capacity(SelPawnForGear, null);
+            Rect textRect = new Rect(topLeft.x + SmallIconSize + 6f, topLeft.y + SmallIconMargin, 104f, SmallIconSize);
+            Widgets.Label(textRect, "SandyMassValue".Translate(mass.ToString("0.##"), capacity.ToString("0.##")));
         }
 
-        private void TryDrawComfyTemperatureRange1(Rect rect)
+        private void DrawComfyTemperatureRange(Vector2 topLeft)
         {
             if (this.SelPawnForGear.Dead)
             {
                 return;
             }
-            Rect rect1 = new Rect(rect.x, rect.y + 26f, 24f, 24f);
-            GUI.DrawTexture(rect1, ContentFinder<Texture2D>.Get("UI/Icons/Min_Temperature", true));
-            TooltipHandler.TipRegion(rect1, "ComfyTemperatureRange".Translate());
-            float statValue = this.SelPawnForGear.GetStatValue(StatDefOf.ComfyTemperatureMin, true);
-            Rect rect2 = new Rect(rect.x + 30f, rect.y + 28f, 104f, 24f);
-            Widgets.Label(rect2, string.Concat(new string[]
-            {
-                " ",
-                statValue.ToStringTemperature("F0")
-            }));
+            Rect iconRect = new Rect(topLeft.x, topLeft.y, SmallIconSize, SmallIconSize);
+            GUI.DrawTexture(iconRect, ContentFinder<Texture2D>.Get("UI/Icons/Min_Temperature"));
+            TooltipHandler.TipRegion(iconRect, "ComfyTemperatureRange".Translate());
+            float statValue = SelPawnForGear.GetStatValue(StatDefOf.ComfyTemperatureMin);
+            Rect textRect = new Rect(topLeft.x + SmallIconSize + 6f, topLeft.y + SmallIconMargin, 104f, SmallIconSize);
+            Widgets.Label(textRect, " " + statValue.ToStringTemperature("F0"));
 
-            rect1 = new Rect(rect.x, rect.y + 52f, 24f, 24f);
-            GUI.DrawTexture(rect1, ContentFinder<Texture2D>.Get("UI/Icons/Max_Temperature", true));
-            TooltipHandler.TipRegion(rect1, "ComfyTemperatureRange".Translate());
-            float statValue2 = this.SelPawnForGear.GetStatValue(StatDefOf.ComfyTemperatureMax, true);
-            rect2 = new Rect(rect.x + 30f, rect.y + 56f, 104f, 24f);
-            Widgets.Label(rect2, string.Concat(new string[]
-            {
-                " ",
-                statValue2.ToStringTemperature("F0")
-            }));
-        }
-        
-        private void DrawThingRow(ref float y, float width, Thing thing, bool inventory = false)
-        {
-            Rect rect = new Rect(0f, y, width, 28f);
-            Widgets.InfoCardButton(rect.width - 24f, y, thing);
-            rect.width -= 24f;
-            if (this.CanControl && (inventory || this.CanControlColonist || (this.SelPawnForGear.Spawned && !this.SelPawnForGear.Map.IsPlayerHome)))
-            {
-                Rect rect2 = new Rect(rect.width - 24f, y, 24f, 24f);
-                TooltipHandler.TipRegion(rect2, "DropThing".Translate());
-                if (Widgets.ButtonImage(rect2, ContentFinder<Texture2D>.Get("UI/Buttons/Drop", true)))
-                {
-                    SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
-                    this.InterfaceDrop(thing);
-                }
-                rect.width -= 24f;
-            }
-            if (this.CanControlColonist)
-            {
-                if ((thing.def.IsNutritionGivingIngestible || thing.def.IsNonMedicalDrug) && thing.IngestibleNow && base.SelPawn.WillEat(thing, null))
-                {
-                    Rect rect3 = new Rect(rect.width - 24f, y, 24f, 24f);
-                    TooltipHandler.TipRegion(rect3, "ConsumeThing".Translate(thing.LabelNoCount, thing));
-                    if (Widgets.ButtonImage(rect3, ContentFinder<Texture2D>.Get("UI/Buttons/Ingest", true)))
-                    {
-                        SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
-                        this.InterfaceIngest(thing);
-                    }
-                }
-                rect.width -= 24f;
-            }
-            Rect rect4 = rect;
-            rect4.xMin = rect4.xMax - 60f;
-            CaravanThingsTabUtility.DrawMass(thing, rect4);
-            rect.width -= 60f;
-            if (Mouse.IsOver(rect))
-            {
-                GUI.color = Sandy_Detailed_RPG_GearTab.HighlightColor;
-                GUI.DrawTexture(rect, TexUI.HighlightTex);
-            }
-            if (thing.def.DrawMatSingle != null && thing.def.DrawMatSingle.mainTexture != null)
-            {
-                Widgets.ThingIcon(new Rect(4f, y, 28f, 28f), thing, 1f);
-            }
-            Text.Anchor = TextAnchor.MiddleLeft;
-            GUI.color = Sandy_Detailed_RPG_GearTab.ThingLabelColor;
-            Rect rect5 = new Rect(ThingLeftX, y, rect.width - ThingLeftX, rect.height);
-            string text = thing.LabelCap;
-            Apparel apparel = thing as Apparel;
-            if (apparel != null && this.SelPawnForGear.outfits != null && this.SelPawnForGear.outfits.forcedHandler.IsForced(apparel))
-            {
-                text = text + ", " + "ApparelForcedLower".Translate();
-            }
-            Text.WordWrap = false;
-            Widgets.Label(rect5, text.Truncate(rect5.width, null));
-            Text.WordWrap = true;
-            string text2 = thing.DescriptionDetailed;
-            if (thing.def.useHitPoints)
-            {
-                string text3 = text2;
-                text2 = string.Concat(new object[]
-                {
-                    text3,
-                    "\n",
-                    thing.HitPoints,
-                    " / ",
-                    thing.MaxHitPoints
-                });
-            }
-            TooltipHandler.TipRegion(rect, text2);
-            y += 28f;
+            iconRect.Set(iconRect.x, iconRect.y + SmallIconSize + SmallIconMargin, SmallIconSize, SmallIconSize);
+            GUI.DrawTexture(iconRect, ContentFinder<Texture2D>.Get("UI/Icons/Max_Temperature"));
+            TooltipHandler.TipRegion(iconRect, "ComfyTemperatureRange".Translate());
+            statValue = SelPawnForGear.GetStatValue(StatDefOf.ComfyTemperatureMax);
+            textRect.Set(textRect.x, textRect.y + SmallIconSize + SmallIconMargin, 104f, SmallIconSize);
+            Widgets.Label(textRect, " " + statValue.ToStringTemperature("F0"));
         }
 
         // xShift: how much to right to adjust the two bars
@@ -767,6 +724,78 @@ namespace Sandy_Detailed_RPG_Inventory
         /*
          * Everything below is duplicated from the base class since they are private to it. Damn, Tynan.
          */
+
+        private void DrawThingRow(ref float y, float width, Thing thing, bool inventory = false)
+        {
+            Rect rect = new Rect(0f, y, width, 28f);
+            Widgets.InfoCardButton(rect.width - SmallIconSize, y, thing);
+            rect.width -= SmallIconSize;
+            if (this.CanControl && (inventory || this.CanControlColonist || (this.SelPawnForGear.Spawned && !this.SelPawnForGear.Map.IsPlayerHome)))
+            {
+                Rect rect2 = new Rect(rect.width - SmallIconSize, y, SmallIconSize, SmallIconSize);
+                TooltipHandler.TipRegion(rect2, "DropThing".Translate());
+                if (Widgets.ButtonImage(rect2, ContentFinder<Texture2D>.Get("UI/Buttons/Drop", true)))
+                {
+                    SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
+                    this.InterfaceDrop(thing);
+                }
+                rect.width -= SmallIconSize;
+            }
+            if (this.CanControlColonist)
+            {
+                if ((thing.def.IsNutritionGivingIngestible || thing.def.IsNonMedicalDrug) && thing.IngestibleNow && base.SelPawn.WillEat(thing, null))
+                {
+                    Rect rect3 = new Rect(rect.width - SmallIconSize, y, SmallIconSize, SmallIconSize);
+                    TooltipHandler.TipRegion(rect3, "ConsumeThing".Translate(thing.LabelNoCount, thing));
+                    if (Widgets.ButtonImage(rect3, ContentFinder<Texture2D>.Get("UI/Buttons/Ingest", true)))
+                    {
+                        SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
+                        this.InterfaceIngest(thing);
+                    }
+                }
+                rect.width -= SmallIconSize;
+            }
+            Rect rect4 = rect;
+            rect4.xMin = rect4.xMax - 60f;
+            CaravanThingsTabUtility.DrawMass(thing, rect4);
+            rect.width -= 60f;
+            if (Mouse.IsOver(rect))
+            {
+                GUI.color = Sandy_Detailed_RPG_GearTab.HighlightColor;
+                GUI.DrawTexture(rect, TexUI.HighlightTex);
+            }
+            if (thing.def.DrawMatSingle != null && thing.def.DrawMatSingle.mainTexture != null)
+            {
+                Widgets.ThingIcon(new Rect(4f, y, 28f, 28f), thing, 1f);
+            }
+            Text.Anchor = TextAnchor.MiddleLeft;
+            GUI.color = Sandy_Detailed_RPG_GearTab.ThingLabelColor;
+            Rect rect5 = new Rect(36f, y, rect.width - 36f, rect.height);
+            string text = thing.LabelCap;
+            Apparel apparel = thing as Apparel;
+            if (apparel != null && this.SelPawnForGear.outfits != null && this.SelPawnForGear.outfits.forcedHandler.IsForced(apparel))
+            {
+                text = text + ", " + "ApparelForcedLower".Translate();
+            }
+            Text.WordWrap = false;
+            Widgets.Label(rect5, text.Truncate(rect5.width, null));
+            Text.WordWrap = true;
+            string text2 = thing.DescriptionDetailed;
+            if (thing.def.useHitPoints)
+            {
+                string text3 = text2;
+                text2 = string.Concat(new object[]
+                {
+                    text3,
+                    "\n",
+                    thing.HitPoints,
+                    " / ",
+                    thing.MaxHitPoints
+                });
+            }
+            TooltipHandler.TipRegion(rect, text2);
+            y += 28f;
+        }
 
         private bool CanControl
         {
@@ -845,11 +874,6 @@ namespace Sandy_Detailed_RPG_Inventory
         private bool ShouldShowEquipment(Pawn p)
         {
             return p.equipment != null;
-        }
-
-        private bool ShouldShowOverallArmor(Pawn p)
-        {
-            return p.RaceProps.Humanlike || this.ShouldShowApparel(p) || p.GetStatValue(StatDefOf.ArmorRating_Sharp, true) > 0f || p.GetStatValue(StatDefOf.ArmorRating_Blunt, true) > 0f || p.GetStatValue(StatDefOf.ArmorRating_Heat, true) > 0f;
         }
     }
 }

@@ -17,24 +17,17 @@ namespace Sandy_Detailed_RPG_Inventory
 
         private float scrollViewHeight;
 
-        private const float TopPadding = 20f;
+        // DrawColonist consts
+        public static readonly Vector3 PawnTextureCameraOffset = new Vector3(0f, 0f, 0f);
 
-        public static readonly new Color ThingLabelColor = new Color(0.9f, 0.9f, 0.9f, 1f);
+        // Inventory list consts
+        private const float ThingLeftX = 36f;
+
+        private static List<Thing> workingInvList = new List<Thing>();
 
         public static readonly new Color HighlightColor = new Color(0.5f, 0.5f, 0.5f, 1f);
 
-        private const float ThingIconSize = 28f;
-
-        private const float ThingRowHeight = 28f;
-
-        private const float ThingLeftX = 36f;
-
-        private const float StandardLineHeight = 22f;
-
-        private static List<Thing> workingInvList = new List<Thing>();
-        
-        public static readonly Vector3 PawnTextureCameraOffset = new Vector3(0f, 0f, 0f);
-
+        // RPG inventory area consts
         private const float UniversalMargin = 10f;
 
         private const float CheckboxHeight = 20f;
@@ -714,7 +707,7 @@ namespace Sandy_Detailed_RPG_Inventory
             }
             Text.Anchor = TextAnchor.MiddleLeft;
             GUI.color = Sandy_Detailed_RPG_GearTab.ThingLabelColor;
-            Rect rect5 = new Rect(36f, y, rect.width - 36f, rect.height);
+            Rect rect5 = new Rect(ThingLeftX, y, rect.width - ThingLeftX, rect.height);
             string text = thing.LabelCap;
             Apparel apparel = thing as Apparel;
             if (apparel != null && this.SelPawnForGear.outfits != null && this.SelPawnForGear.outfits.forcedHandler.IsForced(apparel))
@@ -772,7 +765,7 @@ namespace Sandy_Detailed_RPG_Inventory
         }
 
         /*
-         * Everything below redefined from base class since they are private to it. Damn, Tynan.
+         * Everything below is duplicated from the base class since they are private to it. Damn, Tynan.
          */
 
         private bool CanControl

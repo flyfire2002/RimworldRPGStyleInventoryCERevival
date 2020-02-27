@@ -51,17 +51,22 @@ namespace Sandy_Detailed_RPG_Inventory
         public static readonly new Color HighlightColor = new Color(0.5f, 0.5f, 0.5f, 1f);
 
         // RPG inventory GUI consts
+        private const float CheckboxHeight = 20f;
+        private const float CEAreaHeight = 60f;
+
+        private const float MediumMargin = 6f;
+        private const float UniversalMargin = 10f;
+
         private const float MainItemSize = 64f;
         private const float MiscItemSize = 56f;
-        private const float UniversalMargin = 10f;
-        private const float MainItemStartX = MiscItemSize + 2 * UniversalMargin;
+        private const float MainItemAreaX = MiscItemSize + 2 * UniversalMargin;
 
         private const float SmallIconSize = 24f;
         private const float SmallIconMargin = 2f;
 
-        private const float CheckboxHeight = 20f;
-        private const float CEAreaHeight = 60f;
-
+        // 374 = 2 miscItem + 3 mainItem in a row + 10px margin in between each of them + two 10px margins
+        // on the side + another 10px margin
+        private const float statBoxX = 2 * MiscItemSize + 3 * MainItemSize + (4 + 2 + 1) * UniversalMargin;
         private const float statBoxWidth = 128f;
 
         // Used too many times per tick; keep only one instance and only Get it once to
@@ -140,27 +145,7 @@ namespace Sandy_Detailed_RPG_Inventory
 
             float num = 0f;
 
-            Vector2 statStart = new Vector2(374f, 0f);
-            DrawMassInfo(statStart);
-            statStart.Set(statStart.x, statStart.y + SmallIconSize + SmallIconMargin);
-            DrawComfyTemperatureRange(statStart);
-
-            // Don't check if should show armor for pawn. Being humanlike is suffice to show
-            // armor, and the pawn must be humanlike at this point.
-            Rect armorRect = new Rect(374f, 3 * (SmallIconSize + SmallIconMargin) + 6f,
-                statBoxWidth, 3 * SmallIconSize + 4 * SmallIconMargin);
-            TooltipHandler.TipRegion(armorRect, "OverallArmor".Translate());
-            Rect rectsharp = new Rect(armorRect.x, armorRect.y, armorRect.width, SmallIconSize);
-            DrawOverallArmor(rectsharp, StatDefOf.ArmorRating_Sharp, "ArmorSharp".Translate(),
-                ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorSharp_Icon"));
-            Rect rectblunt = new Rect(armorRect.x, armorRect.y + SmallIconSize + 2 * SmallIconMargin,
-                armorRect.width, SmallIconSize);
-            DrawOverallArmor(rectblunt, StatDefOf.ArmorRating_Blunt, "ArmorBlunt".Translate(),
-                ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorBlunt_Icon"));
-            Rect rectheat = new Rect(armorRect.x, armorRect.y + 2 * (SmallIconSize + 2 * SmallIconMargin),
-                armorRect.width, SmallIconSize);
-            DrawOverallArmor(rectheat, StatDefOf.ArmorRating_Heat, "ArmorHeat".Translate(),
-                ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorHeat_Icon"));
+            Rect statBoxRect = DrawStatBox();
 
             if (this.IsVisible)
             {
@@ -193,8 +178,8 @@ namespace Sandy_Detailed_RPG_Inventory
                 Color color = new Color(1f, 1f, 1f, 1f);
                 GUI.color = color;
                 //Pawn
-                Rect PawnRect = new Rect(374f, 172f, 128f, 128f);
-                this.DrawColonist(PawnRect, this.SelPawnForGear);
+                Rect PawnRect = new Rect(statBoxX, statBoxRect.yMax, statBoxWidth, statBoxWidth);
+                DrawColonist(PawnRect, SelPawnForGear);
             }
 
             if (this.ShouldShowEquipment(this.SelPawnForGear))
@@ -638,8 +623,7 @@ namespace Sandy_Detailed_RPG_Inventory
 
             float mass = MassUtility.GearAndInventoryMass(SelPawnForGear);
             float capacity = MassUtility.Capacity(SelPawnForGear, null);
-            // No clue where that 6px come from. Arbitrary I guess.
-            Rect textRect = new Rect(topLeft.x + SmallIconSize + 6f, topLeft.y + SmallIconMargin, statBoxWidth - SmallIconSize, SmallIconSize);
+            Rect textRect = new Rect(topLeft.x + SmallIconSize + MediumMargin, topLeft.y + SmallIconMargin, statBoxWidth - SmallIconSize, SmallIconSize);
             Widgets.Label(textRect, "SandyMassValue".Translate(mass.ToString("0.##"), capacity.ToString("0.##")));
         }
 
@@ -653,8 +637,7 @@ namespace Sandy_Detailed_RPG_Inventory
             GUI.DrawTexture(iconRect, ContentFinder<Texture2D>.Get("UI/Icons/Min_Temperature"));
             TooltipHandler.TipRegion(iconRect, "ComfyTemperatureRange".Translate());
             float statValue = SelPawnForGear.GetStatValue(StatDefOf.ComfyTemperatureMin);
-            // No clue where that 6px come from. Arbitrary I guess.
-            Rect textRect = new Rect(topLeft.x + SmallIconSize + 6f, topLeft.y + SmallIconMargin, statBoxWidth - SmallIconSize, SmallIconSize);
+            Rect textRect = new Rect(topLeft.x + SmallIconSize + MediumMargin, topLeft.y + SmallIconMargin, statBoxWidth - SmallIconSize, SmallIconSize);
             Widgets.Label(textRect, " " + statValue.ToStringTemperature("F0"));
 
             iconRect.Set(iconRect.x, iconRect.y + SmallIconSize + SmallIconMargin, SmallIconSize, SmallIconSize);
@@ -698,10 +681,36 @@ namespace Sandy_Detailed_RPG_Inventory
             Widgets.Label(valRect, num.ToStringPercent());
         }
 
+        private Rect DrawStatBox()
+        {
+            var massStart = new Vector2(statBoxX, 0f);
+            DrawMassInfo(massStart);
+            var tempStart = new Vector2(statBoxX, SmallIconSize + SmallIconMargin);
+            DrawComfyTemperatureRange(tempStart);
+
+            // Don't check if should show armor for pawn. Being humanlike is suffice to show
+            // armor, and the pawn must be humanlike at this point.
+            Rect armorRect = new Rect(statBoxX, tempStart.y + 2 * (SmallIconSize + SmallIconMargin) + MediumMargin,
+                statBoxWidth, 3 * SmallIconSize + 4 * SmallIconMargin);
+            TooltipHandler.TipRegion(armorRect, "OverallArmor".Translate());
+            Rect rectsharp = new Rect(armorRect.x, armorRect.y, armorRect.width, SmallIconSize);
+            DrawOverallArmor(rectsharp, StatDefOf.ArmorRating_Sharp, "ArmorSharp".Translate(),
+                ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorSharp_Icon"));
+            Rect rectblunt = new Rect(armorRect.x, armorRect.y + SmallIconSize + 2 * SmallIconMargin,
+                armorRect.width, SmallIconSize);
+            DrawOverallArmor(rectblunt, StatDefOf.ArmorRating_Blunt, "ArmorBlunt".Translate(),
+                ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorBlunt_Icon"));
+            Rect rectheat = new Rect(armorRect.x, armorRect.y + 2 * (SmallIconSize + 2 * SmallIconMargin),
+                armorRect.width, SmallIconSize);
+            DrawOverallArmor(rectheat, StatDefOf.ArmorRating_Heat, "ArmorHeat".Translate(),
+                ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorHeat_Icon"));
+            return new Rect(statBoxX, 0, statBoxWidth, armorRect.yMax);
+        }
+
         // x and y to be 0-indexed (e.g. top left slot is x=0, y=0; the one right below it is x=0, y=1)
         private Rect RectAtMainItemArea(int x, int y)
         {
-            return new Rect(MainItemStartX + x * (MainItemSize + UniversalMargin), y * (MainItemSize + UniversalMargin), MainItemSize, MainItemSize);
+            return new Rect(MainItemAreaX + x * (MainItemSize + UniversalMargin), y * (MainItemSize + UniversalMargin), MainItemSize, MainItemSize);
         }
 
         // xShift: how much to right to adjust the two bars

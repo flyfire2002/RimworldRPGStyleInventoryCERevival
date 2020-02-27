@@ -51,7 +51,11 @@ namespace Sandy_Detailed_RPG_Inventory
         public static readonly new Color HighlightColor = new Color(0.5f, 0.5f, 0.5f, 1f);
 
         // RPG inventory GUI consts
+        private const float MainItemSize = 64f;
+        private const float MiscItemSize = 56f;
         private const float UniversalMargin = 10f;
+        private const float MainItemStartX = MiscItemSize + 2 * UniversalMargin;
+
         private const float SmallIconSize = 24f;
         private const float SmallIconMargin = 2f;
 
@@ -160,36 +164,32 @@ namespace Sandy_Detailed_RPG_Inventory
 
             if (this.IsVisible)
             {
+                Rect bgRect;
                 //Hats
-                Rect newRect1 = new Rect(150f, 0f, 64f, 64f);
-                GUI.DrawTexture(newRect1, itemBackground);
-                Rect tipRect1 = newRect1.ContractedBy(12f);
-                TooltipHandler.TipRegion(tipRect1, "Sandy_Head".Translate());
+                bgRect = RectAtMainItemArea(1, 0);
+                GUI.DrawTexture(bgRect, itemBackground);
+                TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_Head".Translate());
                 //Vests
-                Rect newRect2 = new Rect(76f, 148f, 64f, 64f);
-                GUI.DrawTexture(newRect2, itemBackground);
-                Rect tipRect2 = newRect2.ContractedBy(12f);
-                TooltipHandler.TipRegion(tipRect2, "Sandy_TorsoMiddle".Translate());
+                bgRect = RectAtMainItemArea(0, 2);
+                GUI.DrawTexture(bgRect, itemBackground);
+                TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_TorsoMiddle".Translate());
                 //Shirts
-                Rect newRect3 = new Rect(150f, 148f, 64f, 64f);
-                GUI.DrawTexture(newRect3, itemBackground);
-                Rect tipRect3 = newRect3.ContractedBy(12f);
-                TooltipHandler.TipRegion(tipRect3, "Sandy_TorsoOnSkin".Translate());
+                bgRect = RectAtMainItemArea(1, 2);
+                GUI.DrawTexture(bgRect, itemBackground);
+                TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_TorsoOnSkin".Translate());
                 //Dusters
-                Rect newRect4 = new Rect(224f, 148f, 64f, 64f);
-                GUI.DrawTexture(newRect4, itemBackground);
-                Rect tipRect4 = newRect4.ContractedBy(12f);
-                TooltipHandler.TipRegion(tipRect4, "Sandy_TorsoShell".Translate());
+                bgRect = RectAtMainItemArea(2, 2);
+                GUI.DrawTexture(bgRect, itemBackground);
+                TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_TorsoShell".Translate());
                 //Belts
-                Rect newRect5 = new Rect(150f, 222f, 64f, 64f);
-                GUI.DrawTexture(newRect5, itemBackground);
-                Rect tipRect5 = newRect5.ContractedBy(12f);
-                TooltipHandler.TipRegion(tipRect5, "Sandy_Belt".Translate());
+                bgRect = RectAtMainItemArea(1, 3);
+                GUI.DrawTexture(bgRect, itemBackground);
+                TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_Belt".Translate());
                 //Pants
-                Rect newRect6 = new Rect(150f, 296f, 64f, 64f);
-                GUI.DrawTexture(newRect6, itemBackground);
-                Rect tipRect6 = newRect6.ContractedBy(12f);
-                TooltipHandler.TipRegion(tipRect6, "Sandy_Pants".Translate());
+                bgRect = RectAtMainItemArea(1, 4);
+                GUI.DrawTexture(bgRect, itemBackground);
+                TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_Pants".Translate());
+
                 Color color = new Color(1f, 1f, 1f, 1f);
                 GUI.color = color;
                 //Pawn
@@ -696,6 +696,12 @@ namespace Sandy_Detailed_RPG_Inventory
             // the 36px can make the percentage number look like it is centered in the field. Brilliant Sandy.
             Rect valRect = new Rect(rect.x + SmallIconSize + 36f, rect.y + SmallIconMargin, statBoxWidth - SmallIconSize, SmallIconSize);
             Widgets.Label(valRect, num.ToStringPercent());
+        }
+
+        // x and y to be 0-indexed (e.g. top left slot is x=0, y=0; the one right below it is x=0, y=1)
+        private Rect RectAtMainItemArea(int x, int y)
+        {
+            return new Rect(MainItemStartX + x * (MainItemSize + UniversalMargin), y * (MainItemSize + UniversalMargin), MainItemSize, MainItemSize);
         }
 
         // xShift: how much to right to adjust the two bars

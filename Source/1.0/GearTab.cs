@@ -145,42 +145,11 @@ namespace Sandy_Detailed_RPG_Inventory
 
             float num = 0f;
 
-            Rect statBoxRect = DrawStatBox();
-
-            if (this.IsVisible)
-            {
-                Rect bgRect;
-                //Hats
-                bgRect = RectAtMainItemArea(1, 0);
-                GUI.DrawTexture(bgRect, itemBackground);
-                TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_Head".Translate());
-                //Vests
-                bgRect = RectAtMainItemArea(0, 2);
-                GUI.DrawTexture(bgRect, itemBackground);
-                TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_TorsoMiddle".Translate());
-                //Shirts
-                bgRect = RectAtMainItemArea(1, 2);
-                GUI.DrawTexture(bgRect, itemBackground);
-                TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_TorsoOnSkin".Translate());
-                //Dusters
-                bgRect = RectAtMainItemArea(2, 2);
-                GUI.DrawTexture(bgRect, itemBackground);
-                TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_TorsoShell".Translate());
-                //Belts
-                bgRect = RectAtMainItemArea(1, 3);
-                GUI.DrawTexture(bgRect, itemBackground);
-                TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_Belt".Translate());
-                //Pants
-                bgRect = RectAtMainItemArea(1, 4);
-                GUI.DrawTexture(bgRect, itemBackground);
-                TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_Pants".Translate());
-
-                Color color = new Color(1f, 1f, 1f, 1f);
-                GUI.color = color;
-                //Pawn
-                Rect PawnRect = new Rect(statBoxX, statBoxRect.yMax, statBoxWidth, statBoxWidth);
-                DrawColonist(PawnRect, SelPawnForGear);
-            }
+            float statBoxYMax = DrawStatBox();
+            DrawMainItemAreaBackground();
+            Color color = new Color(1f, 1f, 1f, 1f);
+            GUI.color = color;
+            DrawColonist(new Rect(statBoxX, statBoxYMax, statBoxWidth, statBoxWidth), SelPawnForGear);
 
             if (this.ShouldShowEquipment(this.SelPawnForGear))
             {
@@ -681,7 +650,7 @@ namespace Sandy_Detailed_RPG_Inventory
             Widgets.Label(valRect, num.ToStringPercent());
         }
 
-        private Rect DrawStatBox()
+        private float DrawStatBox()
         {
             var massStart = new Vector2(statBoxX, 0f);
             DrawMassInfo(massStart);
@@ -704,13 +673,42 @@ namespace Sandy_Detailed_RPG_Inventory
                 armorRect.width, SmallIconSize);
             DrawOverallArmor(rectheat, StatDefOf.ArmorRating_Heat, "ArmorHeat".Translate(),
                 ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorHeat_Icon"));
-            return new Rect(statBoxX, 0, statBoxWidth, armorRect.yMax);
+            return armorRect.yMax;
         }
 
         // x and y to be 0-indexed (e.g. top left slot is x=0, y=0; the one right below it is x=0, y=1)
         private Rect RectAtMainItemArea(int x, int y)
         {
             return new Rect(MainItemAreaX + x * (MainItemSize + UniversalMargin), y * (MainItemSize + UniversalMargin), MainItemSize, MainItemSize);
+        }
+
+        private void DrawMainItemAreaBackground()
+        {
+            Rect bgRect;
+            //Hats
+            bgRect = RectAtMainItemArea(1, 0);
+            GUI.DrawTexture(bgRect, itemBackground);
+            TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_Head".Translate());
+            //Vests
+            bgRect = RectAtMainItemArea(0, 2);
+            GUI.DrawTexture(bgRect, itemBackground);
+            TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_TorsoMiddle".Translate());
+            //Shirts
+            bgRect = RectAtMainItemArea(1, 2);
+            GUI.DrawTexture(bgRect, itemBackground);
+            TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_TorsoOnSkin".Translate());
+            //Dusters
+            bgRect = RectAtMainItemArea(2, 2);
+            GUI.DrawTexture(bgRect, itemBackground);
+            TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_TorsoShell".Translate());
+            //Belts
+            bgRect = RectAtMainItemArea(1, 3);
+            GUI.DrawTexture(bgRect, itemBackground);
+            TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_Belt".Translate());
+            //Pants
+            bgRect = RectAtMainItemArea(1, 4);
+            GUI.DrawTexture(bgRect, itemBackground);
+            TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_Pants".Translate());
         }
 
         // xShift: how much to right to adjust the two bars

@@ -425,8 +425,8 @@ namespace Sandy_Detailed_RPG_Inventory
                         GUI.DrawTexture(newRect, itemBackground);
                         DrawThingRow1(newRect, current2, false);
                     }
-                    // CE Shield
-                    else if (layers.Contains(Sandy_Gear_DefOf.Shield) 
+                    // CE Shield, Belt layer to make anything not yet moved to Shield-layer-style compatible
+                    else if ((layers.Contains(Sandy_Gear_DefOf.Shield) || layers.Contains(ApparelLayerDefOf.Belt))
                         && (bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) || bodyPartGroups.Contains(Sandy_Gear_DefOf.Arms) || bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
                         || bodyPartGroups.Contains(Sandy_Gear_DefOf.LeftShoulder) || bodyPartGroups.Contains(Sandy_Gear_DefOf.LeftArm) || bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand)))
                     {
@@ -434,7 +434,7 @@ namespace Sandy_Detailed_RPG_Inventory
                         GUI.DrawTexture(newRect, itemBackground);
                         DrawThingRow1(newRect, current2, false);
                     }
-                    else if (layers.Contains(Sandy_Gear_DefOf.Shield)
+                    else if ((layers.Contains(Sandy_Gear_DefOf.Shield) || layers.Contains(ApparelLayerDefOf.Belt))
                         && (bodyPartGroups.Contains(Sandy_Gear_DefOf.RightShoulder) || bodyPartGroups.Contains(Sandy_Gear_DefOf.RightArm) || bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand)))
                     {
                         Rect newRect = RectAtEquipmentArea(1, 1);

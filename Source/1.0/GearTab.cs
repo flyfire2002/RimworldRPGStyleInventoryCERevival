@@ -12,6 +12,7 @@ using CombatExtended;
 
 namespace Sandy_Detailed_RPG_Inventory
 {
+#if DEBUG
     class Benchmarker
     {
         Stopwatch stopwatch = new Stopwatch();
@@ -33,10 +34,13 @@ namespace Sandy_Detailed_RPG_Inventory
             stopwatch.Reset();
         }
     }
+#endif
 
     public class Sandy_Detailed_RPG_GearTab : ITab_Pawn_Gear
     {
+#if DEBUG
         private Benchmarker benchmarker = new Benchmarker();
+#endif
 
         private Vector2 scrollPosition = Vector2.zero;
 
@@ -99,7 +103,9 @@ namespace Sandy_Detailed_RPG_Inventory
 
         protected override void FillTab()
         {
+#if DEBUG
             benchmarker.Start();
+#endif
             Text.Font = GameFont.Small;
             Rect checkBox = new Rect(CheckboxHeight, 0f, 100f, 30f);
             Widgets.CheckboxLabeled(checkBox, "Sandy_ViewList".Translate(), ref viewlist, false, null, null, false);
@@ -128,7 +134,9 @@ namespace Sandy_Detailed_RPG_Inventory
                 GUI.EndGroup();
                 GUI.color = Color.white;
                 Text.Anchor = TextAnchor.UpperLeft;
+#if DEBUG
                 benchmarker.Stop();
+#endif
                 return;
             }
 
@@ -165,220 +173,222 @@ namespace Sandy_Detailed_RPG_Inventory
             {
                 foreach (Apparel current2 in SelPawnForGear.apparel.WornApparel)
                 {
+                    var bodyPartGroups = current2.def.apparel.bodyPartGroups;
+                    var layers = current2.def.apparel.layers;
                     //Head
-                    if ((current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.UpperHead) || current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.FullHead))
-                        && (current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead)))
+                    if ((bodyPartGroups.Contains(BodyPartGroupDefOf.UpperHead) || bodyPartGroups.Contains(BodyPartGroupDefOf.FullHead))
+                        && (layers.Contains(ApparelLayerDefOf.Overhead)))
                     {
                         Rect newRect = RectAtMainItemArea(1, 0);
                         this.DrawThingRow1(newRect, current2, false);
                         continue;
                     }
-                    else if ((current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.UpperHead) || current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.FullHead))
-                        && Sandy_Gear_DefOf.ContainsCEHeadLayer(current2.def.apparel.layers))
+                    else if ((bodyPartGroups.Contains(BodyPartGroupDefOf.UpperHead) || bodyPartGroups.Contains(BodyPartGroupDefOf.FullHead))
+                        && Sandy_Gear_DefOf.ContainsCEHeadLayer(layers))
                     {
                         Rect newRect = RectAtMainItemArea(1, 1);
                         this.DrawThingRow1(newRect, current2, false);
                         continue;
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Eyes) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.UpperHead)
-                        && (current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead) || Sandy_Gear_DefOf.ContainsCEHeadLayer(current2.def.apparel.layers)))
+                    else if (bodyPartGroups.Contains(BodyPartGroupDefOf.Eyes) && !bodyPartGroups.Contains(BodyPartGroupDefOf.UpperHead)
+                        && (layers.Contains(ApparelLayerDefOf.Overhead) || Sandy_Gear_DefOf.ContainsCEHeadLayer(layers)))
                     {
                         Rect newRect = RectAtMainItemArea(2, 0);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Teeth) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.UpperHead)
-                        && (current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead) || Sandy_Gear_DefOf.ContainsCEHeadLayer(current2.def.apparel.layers))
-                        && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Eyes))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Teeth) && !bodyPartGroups.Contains(BodyPartGroupDefOf.UpperHead)
+                        && (layers.Contains(ApparelLayerDefOf.Overhead) || Sandy_Gear_DefOf.ContainsCEHeadLayer(layers))
+                        && !bodyPartGroups.Contains(BodyPartGroupDefOf.Eyes))
                     {
                         Rect newRect = RectAtMainItemArea(0, 0);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //Torso
-                    else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso) && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle))
+                    else if (bodyPartGroups.Contains(BodyPartGroupDefOf.Torso) && layers.Contains(ApparelLayerDefOf.Middle))
                     {
                         Rect newRect = RectAtMainItemArea(0, 2);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso) && current2.def.apparel.layers.Contains(ApparelLayerDefOf.OnSkin))
+                    else if (bodyPartGroups.Contains(BodyPartGroupDefOf.Torso) && layers.Contains(ApparelLayerDefOf.OnSkin))
                     {
                         Rect newRect = RectAtMainItemArea(1, 2);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso) && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell))
+                    else if (bodyPartGroups.Contains(BodyPartGroupDefOf.Torso) && layers.Contains(ApparelLayerDefOf.Shell))
                     {
                         Rect newRect = RectAtMainItemArea(2, 2);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //Belt
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Waist) && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Belt))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Waist) && layers.Contains(ApparelLayerDefOf.Belt))
                     {
                         Rect newRect = RectAtMainItemArea(1, 3);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //Jetpack
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Waist) && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Waist) && layers.Contains(ApparelLayerDefOf.Shell))
                     {
                         Rect newRect = RectAtMainItemArea(2, 3);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //Legs
-                    else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Legs) && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle))
+                    else if (bodyPartGroups.Contains(BodyPartGroupDefOf.Legs) && layers.Contains(ApparelLayerDefOf.Middle))
                     {
                         Rect newRect = RectAtMainItemArea(0, 4);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Legs) && current2.def.apparel.layers.Contains(ApparelLayerDefOf.OnSkin))
+                    else if (bodyPartGroups.Contains(BodyPartGroupDefOf.Legs) && layers.Contains(ApparelLayerDefOf.OnSkin))
                     {
                         Rect newRect = RectAtMainItemArea(1, 4);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Legs) && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell))
+                    else if (bodyPartGroups.Contains(BodyPartGroupDefOf.Legs) && layers.Contains(ApparelLayerDefOf.Shell))
                     {
                         Rect newRect = RectAtMainItemArea(2, 4);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //Feet
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Feet) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Legs)
-                        && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Feet) && !bodyPartGroups.Contains(BodyPartGroupDefOf.Legs)
+                        && layers.Contains(ApparelLayerDefOf.Middle))
                     {
                         Rect newRect = RectAtMainItemArea(0, 5);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Feet) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Legs)
-                        && current2.def.apparel.layers.Contains(ApparelLayerDefOf.OnSkin))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Feet) && !bodyPartGroups.Contains(BodyPartGroupDefOf.Legs)
+                        && layers.Contains(ApparelLayerDefOf.OnSkin))
                     {
                         Rect newRect = RectAtMainItemArea(1, 5);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Feet) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Legs)
-                        && (current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell) || current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead)))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Feet) && !bodyPartGroups.Contains(BodyPartGroupDefOf.Legs)
+                        && (layers.Contains(ApparelLayerDefOf.Shell) || layers.Contains(ApparelLayerDefOf.Overhead)))
                     {
                         Rect newRect = RectAtMainItemArea(2, 5);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //Hands
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
-                        && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands) && !bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
+                        && layers.Contains(ApparelLayerDefOf.Middle) && !bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
                     {
                         Rect newRect = RectAtMiscItemArea(0, 2);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     // Hands cont. - Removed shoulder check to allow some gloves to show up here
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
-                        && (current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell) || current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead)))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands) && !bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
+                        && (layers.Contains(ApparelLayerDefOf.Shell) || layers.Contains(ApparelLayerDefOf.Overhead)))
                     {
                         Rect newRect = RectAtMiscItemArea(0, 1);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
-                        && current2.def.apparel.layers.Contains(ApparelLayerDefOf.OnSkin) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands) && !bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
+                        && layers.Contains(ApparelLayerDefOf.OnSkin) && !bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
                     {
                         Rect newRect = RectAtMiscItemArea(0, 3);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //Shoulders
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell)
-                        && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand)
-                        && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) && !layers.Contains(ApparelLayerDefOf.Shell)
+                        && !bodyPartGroups.Contains(BodyPartGroupDefOf.Torso) && !bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand)
+                        && layers.Contains(ApparelLayerDefOf.Middle) && !bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand))
                     {
                         Rect newRect = RectAtMiscItemArea(1, 3);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell)
-                        && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand)
-                        && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) && layers.Contains(ApparelLayerDefOf.Shell)
+                        && !bodyPartGroups.Contains(BodyPartGroupDefOf.Torso) && !bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand)
+                        && !bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand))
                     {
                         Rect newRect = RectAtMiscItemArea(1, 2);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell)
-                        && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand)
-                        && current2.def.apparel.layers.Contains(ApparelLayerDefOf.OnSkin) && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle)
-                        && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) && !layers.Contains(ApparelLayerDefOf.Shell)
+                        && !bodyPartGroups.Contains(BodyPartGroupDefOf.Torso) && !bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand)
+                        && layers.Contains(ApparelLayerDefOf.OnSkin) && !layers.Contains(ApparelLayerDefOf.Middle)
+                        && !bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand))
                     {
                         Rect newRect = RectAtMiscItemArea(1, 1);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //RightHand
-                    else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
-                        && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
-                        && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell))
+                    else if (bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand) && !bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
+                        && layers.Contains(ApparelLayerDefOf.Middle) && !bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
+                        && !layers.Contains(ApparelLayerDefOf.Shell))
                     {
                         Rect newRect = RectAtMiscItemArea(1, 5);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
-                        && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
+                    else if (bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand) && !bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
+                        && layers.Contains(ApparelLayerDefOf.Shell) && !bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
                     {
                         Rect newRect = RectAtMiscItemArea(1, 6);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
-                        && current2.def.apparel.layers.Contains(ApparelLayerDefOf.OnSkin) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
-                        && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle) && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell))
+                    else if (bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand) && !bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
+                        && layers.Contains(ApparelLayerDefOf.OnSkin) && !bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
+                        && !layers.Contains(ApparelLayerDefOf.Middle) && !layers.Contains(ApparelLayerDefOf.Shell))
                     {
                         Rect newRect = RectAtMiscItemArea(1, 4);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //LeftHand
-                    else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
-                        && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
-                        && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell))
+                    else if (bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand) && !bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
+                        && layers.Contains(ApparelLayerDefOf.Middle) && !bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
+                        && !layers.Contains(ApparelLayerDefOf.Shell))
                     {
                         Rect newRect = RectAtMiscItemArea(0, 5);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
-                        && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
+                    else if (bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand) && !bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
+                        && layers.Contains(ApparelLayerDefOf.Shell) && !bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
                     {
                         Rect newRect = RectAtMiscItemArea(0, 6);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
-                        && current2.def.apparel.layers.Contains(ApparelLayerDefOf.OnSkin) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
-                        && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Middle) && !current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell))
+                    else if (bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand) && !bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
+                        && layers.Contains(ApparelLayerDefOf.OnSkin) && !bodyPartGroups.Contains(BodyPartGroupDefOf.Torso)
+                        && !layers.Contains(ApparelLayerDefOf.Middle) && !layers.Contains(ApparelLayerDefOf.Shell))
                     {
                         Rect newRect = RectAtMiscItemArea(0, 4);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     //Neck
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Neck) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders)
-                             && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Belt) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Neck) && !bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders)
+                             && layers.Contains(ApparelLayerDefOf.Belt) && !bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
                     {
                         Rect newRect = RectAtMainItemArea(0, 1);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Neck) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders)
-                             && (current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead) || Sandy_Gear_DefOf.ContainsCEHeadLayer(current2.def.apparel.layers))
-                             && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Neck) && !bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders)
+                             && (layers.Contains(ApparelLayerDefOf.Overhead) || Sandy_Gear_DefOf.ContainsCEHeadLayer(layers))
+                             && !bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
                     {
                         Rect newRect = RectAtMainItemArea(1, 1);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Neck) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders)
-                             && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Shell) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Neck) && !bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders)
+                             && layers.Contains(ApparelLayerDefOf.Shell) && !bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
                     {
                         Rect newRect = RectAtMainItemArea(2, 1);
                         GUI.DrawTexture(newRect, itemBackground);
@@ -387,49 +397,49 @@ namespace Sandy_Detailed_RPG_Inventory
 
                     //this part add jewelry support
                     //They currently overlape with some appearoll 2 stuff
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Neck) && (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Accessories)))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Neck) && (layers.Contains(Sandy_Gear_DefOf.Accessories)))
                     {
                         Rect newRect = RectAtMainItemArea(0, 1);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Ears) && (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Accessories)))
+                    else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Ears) && (layers.Contains(Sandy_Gear_DefOf.Accessories)))
                     {
                         Rect newRect = RectAtMiscItemArea(1, 0);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand) && (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Accessories)))
+                    else if (bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand) && (layers.Contains(Sandy_Gear_DefOf.Accessories)))
                     {
                         Rect newRect = RectAtMiscItemArea(0, 0);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     // CE TacVest
-                    else if (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Webbing) && current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
+                    else if (layers.Contains(Sandy_Gear_DefOf.Webbing) && bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
                     {
                         Rect newRect = RectAtMainItemArea(0, 3);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     // CE Backpack
-                    else if (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Backpack) && current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
+                    else if (layers.Contains(Sandy_Gear_DefOf.Backpack) && bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
                     {
                         Rect newRect = RectAtMainItemArea(2, 3);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     // CE Shield
-                    else if (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Shield) 
-                        && (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) || current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Arms) || current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
-                        || current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.LeftShoulder) || current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.LeftArm) || current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand)))
+                    else if (layers.Contains(Sandy_Gear_DefOf.Shield) 
+                        && (bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) || bodyPartGroups.Contains(Sandy_Gear_DefOf.Arms) || bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
+                        || bodyPartGroups.Contains(Sandy_Gear_DefOf.LeftShoulder) || bodyPartGroups.Contains(Sandy_Gear_DefOf.LeftArm) || bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand)))
                     {
                         Rect newRect = RectAtEquipmentArea(0, 1);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    else if (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Shield)
-                        && (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.RightShoulder) || current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.RightArm) || current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand)))
+                    else if (layers.Contains(Sandy_Gear_DefOf.Shield)
+                        && (bodyPartGroups.Contains(Sandy_Gear_DefOf.RightShoulder) || bodyPartGroups.Contains(Sandy_Gear_DefOf.RightArm) || bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand)))
                     {
                         Rect newRect = RectAtEquipmentArea(1, 1);
                         GUI.DrawTexture(newRect, itemBackground);
@@ -440,6 +450,7 @@ namespace Sandy_Detailed_RPG_Inventory
 
             // Do not check if should show (text) inventory for pawn; the pawn being humanlike is suffice, and
             // at this point the pawn must be humanlike.
+            // 440 seems to be couple pxs below the end of item area on Y axis.
             num = 440f;
             Widgets.ListSeparator(ref num, viewRect.width, "Inventory".Translate());
             Sandy_Detailed_RPG_GearTab.workingInvList.Clear();
@@ -460,7 +471,9 @@ namespace Sandy_Detailed_RPG_Inventory
             GUI.EndGroup();
             GUI.color = Color.white;
             Text.Anchor = TextAnchor.UpperLeft;
+#if DEBUG
             benchmarker.Stop();
+#endif
         }
 
         private void DrawColonist(Rect rect, Pawn pawn)

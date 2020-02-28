@@ -15,6 +15,13 @@ namespace Sandy_Detailed_RPG_Inventory
         public static BodyPartGroupDef Hands;
         public static BodyPartGroupDef Waist;
         public static BodyPartGroupDef Feet;
+        // CE Layers
+        public static ApparelLayerDef Webbing;
+        public static ApparelLayerDef Backpack;
+        public static ApparelLayerDef Shield;
+        public static ApparelLayerDef OnHead;
+        public static ApparelLayerDef StrappedHead;
+        public static ApparelLayerDef MiddleHead;
         //This was added for Jewelry
         //Two defs file was added, they are in Defs\Jewelry_compat
         public static BodyPartGroupDef Ears;

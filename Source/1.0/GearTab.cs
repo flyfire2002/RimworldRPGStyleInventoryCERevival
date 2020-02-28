@@ -430,17 +430,18 @@ namespace Sandy_Detailed_RPG_Inventory
                         && (bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) || bodyPartGroups.Contains(Sandy_Gear_DefOf.Arms) || bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
                         || bodyPartGroups.Contains(Sandy_Gear_DefOf.LeftShoulder) || bodyPartGroups.Contains(Sandy_Gear_DefOf.LeftArm) || bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand)))
                     {
-                        Rect newRect = RectAtEquipmentArea(0, 1);
+                        Rect newRect = RectAtEquipmentArea(1, 0);
                         GUI.DrawTexture(newRect, itemBackground);
                         DrawThingRow1(newRect, current2, false);
                     }
+                    /* Not until someone tells me there are right hand shield or dual wield shields lmfao.
                     else if ((layers.Contains(Sandy_Gear_DefOf.Shield) || layers.Contains(ApparelLayerDefOf.Belt))
                         && (bodyPartGroups.Contains(Sandy_Gear_DefOf.RightShoulder) || bodyPartGroups.Contains(Sandy_Gear_DefOf.RightArm) || bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand)))
                     {
                         Rect newRect = RectAtEquipmentArea(1, 1);
                         GUI.DrawTexture(newRect, itemBackground);
                         DrawThingRow1(newRect, current2, false);
-                    }
+                    }*/
                 }
             }
 
@@ -689,7 +690,7 @@ namespace Sandy_Detailed_RPG_Inventory
                 Rect itemRect = RectAtEquipmentArea(0, 0);
                 if (current != SelPawnForGear.equipment.Primary)
                 {
-                    itemRect = RectAtEquipmentArea(1, 0);
+                    itemRect = RectAtEquipmentArea(0, 1);
                 }
                 GUI.DrawTexture(itemRect, itemBackground);
                 DrawThingRow1(itemRect, current, false);
@@ -747,15 +748,17 @@ namespace Sandy_Detailed_RPG_Inventory
             bgRect = RectAtEquipmentArea(0, 0);
             GUI.DrawTexture(bgRect, itemBackground);
             TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_PrimaryEquipment".Translate());
-            bgRect = RectAtEquipmentArea(1, 0);
-            GUI.DrawTexture(bgRect, itemBackground);
-            TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_SecondaryEquipment".Translate());
             bgRect = RectAtEquipmentArea(0, 1);
             GUI.DrawTexture(bgRect, itemBackground);
+            TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_SecondaryEquipment".Translate());
+            bgRect = RectAtEquipmentArea(1, 0);
+            GUI.DrawTexture(bgRect, itemBackground);
             TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_ShieldLeft".Translate());
+            /* Not until someone tells me there are right hand shield or dual wield shields lmfao.
             bgRect = RectAtEquipmentArea(1, 1);
             GUI.DrawTexture(bgRect, itemBackground);
             TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_ShieldRight".Translate());
+            */
         }
 
         // xShift: how much to right to adjust the two bars

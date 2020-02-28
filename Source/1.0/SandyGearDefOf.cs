@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Verse;
 using RimWorld;
 
@@ -22,9 +23,19 @@ namespace Sandy_Detailed_RPG_Inventory
         public static ApparelLayerDef OnHead;
         public static ApparelLayerDef StrappedHead;
         public static ApparelLayerDef MiddleHead;
+        // CE BodyPartGroups
+        public static BodyPartGroupDef LeftShoulder;
+        public static BodyPartGroupDef RightShoulder;
+        public static BodyPartGroupDef LeftArm;
+        public static BodyPartGroupDef RightArm;
         //This was added for Jewelry
         //Two defs file was added, they are in Defs\Jewelry_compat
         public static BodyPartGroupDef Ears;
         public static ApparelLayerDef Accessories;
+
+        public static bool ContainsCEHeadLayer(List<ApparelLayerDef> layers)
+        {
+            return layers.Contains(StrappedHead) || layers.Contains(MiddleHead) || layers.Contains(OnHead);
+        }
     }
 }

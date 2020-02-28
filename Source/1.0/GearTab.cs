@@ -56,6 +56,7 @@ namespace Sandy_Detailed_RPG_Inventory
         private const float MainItemMargin = 10f;
         private const float MiscItemSize = 56f;
         private const float MiscItemMargin = 7f;
+        private const float EquipmentMargin = 8f;
         private const float MediumMargin = 6f;
 
         private const float MainItemAreaX = MiscItemSize + 2 * MainItemMargin;
@@ -72,6 +73,8 @@ namespace Sandy_Detailed_RPG_Inventory
         // Used too many times per tick; keep only one instance and only Get it once to
         // save 80 microsec (-10% time) per tick.
         private static Texture2D itemBackground;
+
+        private Vector2 equipmentsAreaTopLeft;
 
         #region CE_Field
         private const float _barHeight = 20f;
@@ -148,12 +151,14 @@ namespace Sandy_Detailed_RPG_Inventory
             // Draw always shown sections: mass/temp/armor, background for main body parts, and pawn portrait
             float statBoxYMax = DrawStatBox();
             DrawMainItemAreaBackground();
-            Rect pawnRect = new Rect(statBoxX, statBoxYMax + SmallIconMargin, statBoxWidth, statBoxWidth);
+            Rect pawnRect = new Rect(statBoxX, statBoxYMax + 2 * MediumMargin, statBoxWidth, statBoxWidth);
             DrawColonist(pawnRect, SelPawnForGear);
+            equipmentsAreaTopLeft = new Vector2(statBoxX + EquipmentMargin / 2, pawnRect.yMax + MainItemMargin);
+            DrawEquipmentsAreaBackground();
 
             if (ShouldShowEquipment(SelPawnForGear))
             {
-                DrawEquipments(new Vector2(statBoxX + statBoxWidth / 2 - MainItemSize / 2, pawnRect.yMax + SmallIconMargin));
+                DrawEquipments();
             }
 
             if (ShouldShowApparel(SelPawnForGear))
@@ -162,20 +167,29 @@ namespace Sandy_Detailed_RPG_Inventory
                 {
                     //Head
                     if ((current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.UpperHead) || current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.FullHead))
-                       && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead))
+                        && (current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead)))
                     {
                         Rect newRect = RectAtMainItemArea(1, 0);
                         this.DrawThingRow1(newRect, current2, false);
+                        continue;
+                    }
+                    else if ((current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.UpperHead) || current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.FullHead))
+                        && Sandy_Gear_DefOf.ContainsCEHeadLayer(current2.def.apparel.layers))
+                    {
+                        Rect newRect = RectAtMainItemArea(1, 1);
+                        this.DrawThingRow1(newRect, current2, false);
+                        continue;
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Eyes) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.UpperHead)
-                        && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead))
+                        && (current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead) || Sandy_Gear_DefOf.ContainsCEHeadLayer(current2.def.apparel.layers)))
                     {
                         Rect newRect = RectAtMainItemArea(2, 0);
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Teeth) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.UpperHead)
-                        && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Eyes))
+                        && (current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead) || Sandy_Gear_DefOf.ContainsCEHeadLayer(current2.def.apparel.layers))
+                        && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Eyes))
                     {
                         Rect newRect = RectAtMainItemArea(0, 0);
                         GUI.DrawTexture(newRect, itemBackground);
@@ -356,7 +370,8 @@ namespace Sandy_Detailed_RPG_Inventory
                         this.DrawThingRow1(newRect, current2, false);
                     }
                     else if (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Neck) && !current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders)
-                             && current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead) && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
+                             && (current2.def.apparel.layers.Contains(ApparelLayerDefOf.Overhead) || Sandy_Gear_DefOf.ContainsCEHeadLayer(current2.def.apparel.layers))
+                             && !current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
                     {
                         Rect newRect = RectAtMainItemArea(1, 1);
                         GUI.DrawTexture(newRect, itemBackground);
@@ -390,22 +405,36 @@ namespace Sandy_Detailed_RPG_Inventory
                         GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    if (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Webbing) && current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
+                    // CE TacVest
+                    else if (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Webbing) && current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
                     {
                         Rect newRect = RectAtMainItemArea(0, 3);
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    if (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Backpack) && current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
+                    // CE Backpack
+                    else if (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Backpack) && current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
                     {
                         Rect newRect = RectAtMainItemArea(2, 3);
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    /* Could be the code for ammo vests and backpack 
-                    if (current2.def.apparel.layers.Contains(ApparelLayerDefOf.Belt) && current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Waist)) {
-                        Rect newRect = new Rect(150f, 178f, 64f, 64f);
+                    // CE Shield
+                    else if (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Shield) 
+                        && (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) || current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Arms) || current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
+                        || current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.LeftShoulder) || current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.LeftArm) || current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand)))
+                    {
+                        Rect newRect = RectAtEquipmentArea(0, 1);
+                        GUI.DrawTexture(newRect, itemBackground);
                         this.DrawThingRow1(newRect, current2, false);
                     }
-                    */
+                    else if (current2.def.apparel.layers.Contains(Sandy_Gear_DefOf.Shield)
+                        && (current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.RightShoulder) || current2.def.apparel.bodyPartGroups.Contains(Sandy_Gear_DefOf.RightArm) || current2.def.apparel.bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand)))
+                    {
+                        Rect newRect = RectAtEquipmentArea(1, 1);
+                        GUI.DrawTexture(newRect, itemBackground);
+                        this.DrawThingRow1(newRect, current2, false);
+                    }
                 }
             }
 
@@ -646,14 +675,14 @@ namespace Sandy_Detailed_RPG_Inventory
             return armorRect.yMax;
         }
 
-        private void DrawEquipments(Vector2 topLeft)
+        private void DrawEquipments()
         {
             foreach (ThingWithComps current in SelPawnForGear.equipment.AllEquipmentListForReading)
             {
-                Rect itemRect = new Rect(topLeft.x, topLeft.y, MainItemSize, MainItemSize);
+                Rect itemRect = RectAtEquipmentArea(0, 0);
                 if (current != SelPawnForGear.equipment.Primary)
                 {
-                    itemRect = new Rect(topLeft.x, topLeft.y + MainItemSize + MainItemMargin, MainItemSize, MainItemSize);
+                    itemRect = RectAtEquipmentArea(1, 0);
                 }
                 GUI.DrawTexture(itemRect, itemBackground);
                 DrawThingRow1(itemRect, current, false);
@@ -671,40 +700,56 @@ namespace Sandy_Detailed_RPG_Inventory
         {
             return new Rect(MainItemAreaX + x * (MainItemSize + MainItemMargin), y * (MainItemSize + MainItemMargin), MainItemSize, MainItemSize);
         }
-
-        // x and y to be 0-indexed (e.g. top left slot is x=0, y=0; the one right below it is x=0, y=1)
+        
         private Rect RectAtMiscItemArea(int x, int y)
         {
             return new Rect(MiscItemAreaX + x * (3 * MainItemSize + MiscItemSize + 4 * MainItemMargin), y * (MiscItemSize + MiscItemMargin), MiscItemSize, MiscItemSize);
+        }
+        
+
+        private Rect RectAtEquipmentArea(int x, int y)
+        {
+            return new Rect(equipmentsAreaTopLeft.x + x * (MiscItemSize + MiscItemMargin), equipmentsAreaTopLeft.y + y * (MiscItemSize + MiscItemMargin), MiscItemSize, MiscItemSize);
         }
 
         private void DrawMainItemAreaBackground()
         {
             Rect bgRect;
-            //Hats
             bgRect = RectAtMainItemArea(1, 0);
             GUI.DrawTexture(bgRect, itemBackground);
-            TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_Head".Translate());
-            //Vests
+            TooltipHandler.TipRegion(bgRect.ContractedBy(MainItemMargin), "Sandy_Head".Translate());
             bgRect = RectAtMainItemArea(0, 2);
             GUI.DrawTexture(bgRect, itemBackground);
-            TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_TorsoMiddle".Translate());
-            //Shirts
+            TooltipHandler.TipRegion(bgRect.ContractedBy(MainItemMargin), "Sandy_TorsoMiddle".Translate());
             bgRect = RectAtMainItemArea(1, 2);
             GUI.DrawTexture(bgRect, itemBackground);
-            TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_TorsoOnSkin".Translate());
-            //Dusters
+            TooltipHandler.TipRegion(bgRect.ContractedBy(MainItemMargin), "Sandy_TorsoOnSkin".Translate());
             bgRect = RectAtMainItemArea(2, 2);
             GUI.DrawTexture(bgRect, itemBackground);
-            TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_TorsoShell".Translate());
-            //Belts
+            TooltipHandler.TipRegion(bgRect.ContractedBy(MainItemMargin), "Sandy_TorsoShell".Translate());
             bgRect = RectAtMainItemArea(1, 3);
             GUI.DrawTexture(bgRect, itemBackground);
-            TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_Belt".Translate());
-            //Pants
+            TooltipHandler.TipRegion(bgRect.ContractedBy(MainItemMargin), "Sandy_Belt".Translate());
             bgRect = RectAtMainItemArea(1, 4);
             GUI.DrawTexture(bgRect, itemBackground);
-            TooltipHandler.TipRegion(bgRect.ContractedBy(12f), "Sandy_Pants".Translate());
+            TooltipHandler.TipRegion(bgRect.ContractedBy(MainItemMargin), "Sandy_Pants".Translate());
+        }
+
+        private void DrawEquipmentsAreaBackground()
+        {
+            Rect bgRect;
+            bgRect = RectAtEquipmentArea(0, 0);
+            GUI.DrawTexture(bgRect, itemBackground);
+            TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_PrimaryEquipment".Translate());
+            bgRect = RectAtEquipmentArea(1, 0);
+            GUI.DrawTexture(bgRect, itemBackground);
+            TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_SecondaryEquipment".Translate());
+            bgRect = RectAtEquipmentArea(0, 1);
+            GUI.DrawTexture(bgRect, itemBackground);
+            TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_ShieldLeft".Translate());
+            bgRect = RectAtEquipmentArea(1, 1);
+            GUI.DrawTexture(bgRect, itemBackground);
+            TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_ShieldRight".Translate());
         }
 
         // xShift: how much to right to adjust the two bars

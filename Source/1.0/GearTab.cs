@@ -103,7 +103,7 @@ namespace Sandy_Detailed_RPG_Inventory
             benchmarker.Start();
 #endif
             Text.Font = GameFont.Small;
-            Rect checkBox = new Rect(CheckboxHeight, 0f, 100f, 30f);
+            Rect checkBox = new Rect(20f, 0f, 140f, 30f);
             Widgets.CheckboxLabeled(checkBox, "Sandy_ViewList".Translate(), ref viewlist, false, null, null, false);
 
             // Delegate to vanilla Filltab (sans drawing CE loadout bars) if show as list is chosen, or if the pawn is not human

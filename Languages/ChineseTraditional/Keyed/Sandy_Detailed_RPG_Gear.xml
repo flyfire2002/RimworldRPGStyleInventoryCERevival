@@ -4,11 +4,15 @@
   <SandyMassCarried>當前負重</SandyMassCarried>
   <SandyMassValue> {0} / {1} 公斤</SandyMassValue>
   <Sandy_ViewList>顯示列表</Sandy_ViewList>
-  <Sandy_Head>頭 Overhead</Sandy_Head>
-  <Sandy_TorsoMiddle>軀幹 Middle</Sandy_TorsoMiddle>
-  <Sandy_TorsoOnSkin>軀幹 OnSkin</Sandy_TorsoOnSkin>
-  <Sandy_TorsoShell>軀幹 Shell</Sandy_TorsoShell>
-  <Sandy_Belt>帶</Sandy_Belt>
-  <Sandy_Pants>腿 OnSkin</Sandy_Pants>
+  <Sandy_Head>頭部</Sandy_Head>
+  <Sandy_TorsoMiddle>軀幹（中層）</Sandy_TorsoMiddle>
+  <Sandy_TorsoOnSkin>軀幹（貼身）</Sandy_TorsoOnSkin>
+  <Sandy_TorsoShell>軀幹（外套）</Sandy_TorsoShell>
+  <Sandy_Belt>腰帶</Sandy_Belt>
+  <Sandy_Pants>褲子</Sandy_Pants>
+  <Sandy_PrimaryEquipment>主裝備</Sandy_PrimaryEquipment>
+  <Sandy_SecondaryEquipment>副裝備</Sandy_SecondaryEquipment>
+  <Sandy_ShieldLeft>左手盾牌</Sandy_ShieldLeft>
+  <Sandy_ShieldRight>右手盾牌</Sandy_ShieldRight>
 
 </LanguageData>

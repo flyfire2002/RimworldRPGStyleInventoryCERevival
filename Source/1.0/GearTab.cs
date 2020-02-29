@@ -60,6 +60,7 @@ namespace Sandy_Detailed_RPG_Inventory
         private const float MainItemMargin = 10f;
         private const float MiscItemSize = 56f;
         private const float MiscItemMargin = 7f;
+        private const float MainEquipmentSize = 72f;
         private const float EquipmentMargin = 8f;
         private const float MediumMargin = 6f;
 
@@ -155,9 +156,9 @@ namespace Sandy_Detailed_RPG_Inventory
             // Draw always shown sections: mass/temp/armor, background for main body parts, and pawn portrait
             float statBoxYMax = DrawStatBox();
             DrawMainItemAreaBackground();
-            Rect pawnRect = new Rect(statBoxX, statBoxYMax + 2 * MediumMargin, statBoxWidth, statBoxWidth);
+            Rect pawnRect = new Rect(statBoxX, statBoxYMax + MiscItemMargin, statBoxWidth, statBoxWidth);
             DrawColonist(pawnRect, SelPawnForGear);
-            equipmentsAreaTopLeft = new Vector2(statBoxX + EquipmentMargin / 2, pawnRect.yMax + MainItemMargin);
+            equipmentsAreaTopLeft = new Vector2(statBoxX + EquipmentMargin / 2, pawnRect.yMax);
             DrawEquipmentsAreaBackground();
 
             if (ShouldShowEquipment(SelPawnForGear))
@@ -430,7 +431,7 @@ namespace Sandy_Detailed_RPG_Inventory
                         && (bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) || bodyPartGroups.Contains(Sandy_Gear_DefOf.Arms) || bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
                         || bodyPartGroups.Contains(Sandy_Gear_DefOf.LeftShoulder) || bodyPartGroups.Contains(Sandy_Gear_DefOf.LeftArm) || bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand)))
                     {
-                        Rect newRect = RectAtEquipmentArea(1, 0);
+                        Rect newRect = RectAtEquipmentArea(0, 1);
                         GUI.DrawTexture(newRect, itemBackground);
                         DrawThingRow1(newRect, current2, false);
                     }
@@ -690,7 +691,7 @@ namespace Sandy_Detailed_RPG_Inventory
                 Rect itemRect = RectAtEquipmentArea(0, 0);
                 if (current != SelPawnForGear.equipment.Primary)
                 {
-                    itemRect = RectAtEquipmentArea(0, 1);
+                    itemRect = RectAtEquipmentArea(1, 1);
                 }
                 GUI.DrawTexture(itemRect, itemBackground);
                 DrawThingRow1(itemRect, current, false);
@@ -716,7 +717,11 @@ namespace Sandy_Detailed_RPG_Inventory
         
         private Rect RectAtEquipmentArea(int x, int y)
         {
-            return new Rect(equipmentsAreaTopLeft.x + x * (MiscItemSize + MiscItemMargin), equipmentsAreaTopLeft.y + y * (MiscItemSize + MiscItemMargin), MiscItemSize, MiscItemSize);
+            if (y == 0)
+            {
+                return new Rect(equipmentsAreaTopLeft.x + (statBoxWidth - MainEquipmentSize - EquipmentMargin) / 2, equipmentsAreaTopLeft.y, MainEquipmentSize, MainEquipmentSize);
+            }
+            return new Rect(equipmentsAreaTopLeft.x + x * (MiscItemSize + MiscItemMargin), equipmentsAreaTopLeft.y + y * (MainEquipmentSize + MiscItemMargin), MiscItemSize, MiscItemSize);
         }
 
         private void DrawMainItemAreaBackground()
@@ -748,10 +753,10 @@ namespace Sandy_Detailed_RPG_Inventory
             bgRect = RectAtEquipmentArea(0, 0);
             GUI.DrawTexture(bgRect, itemBackground);
             TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_PrimaryEquipment".Translate());
-            bgRect = RectAtEquipmentArea(0, 1);
+            bgRect = RectAtEquipmentArea(1, 1);
             GUI.DrawTexture(bgRect, itemBackground);
             TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_SecondaryEquipment".Translate());
-            bgRect = RectAtEquipmentArea(1, 0);
+            bgRect = RectAtEquipmentArea(0, 1);
             GUI.DrawTexture(bgRect, itemBackground);
             TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_ShieldLeft".Translate());
             /* Not until someone tells me there are right hand shield or dual wield shields lmfao.

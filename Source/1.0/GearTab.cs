@@ -36,7 +36,7 @@ namespace Sandy_Detailed_RPG_Inventory
     }
 #endif
 
-    public class Sandy_Detailed_RPG_GearTab : ITab_Pawn_Gear
+    public class Sandy_Detailed_RPG_GearTab : CombatExtended.ITab_Inventory
     {
 #if DEBUG
         private Benchmarker benchmarker = new Benchmarker();
@@ -93,7 +93,7 @@ namespace Sandy_Detailed_RPG_Inventory
 
         public Sandy_Detailed_RPG_GearTab()
         {
-            size = new Vector2(550f, 560f);
+            size = new Vector2(550f, 565f);
             labelKey = "TabGear";
             tutorTag = "Gear";
         }
@@ -113,21 +113,22 @@ namespace Sandy_Detailed_RPG_Inventory
             {
                 // Set an enclosing GUI group that contains the group from base.FillTab
                 // and the CE loadout bar.
-                Rect listViewPosition = new Rect(0f, 0f, size.x, size.y);
+                Rect listViewPosition = new Rect(0f, MainItemMargin, size.x, size.y);
                 GUI.BeginGroup(listViewPosition);
                 Text.Font = GameFont.Small;
                 GUI.color = Color.white;
 
-                // Hack. Base Filltab use size.y to set BeginGroup. Change it here so the list GUI
+                // Hack. Vanilla Filltab use size.y to set BeginGroup. Change it here so the list GUI
                 // group doesn't overlap with CE loadout bars.
-                size.Set(size.x, size.y - CEAreaHeight);
+                // Not needed if inheriting CE's inventory tab since it draws the bars
+                //size.Set(size.x, size.y - CEAreaHeight);
                 base.FillTab();
                 // Restore the size.y, otherwise the tab will shrink by 60px per frame.
-                size.Set(size.x, size.y + CEAreaHeight);
+                //size.Set(size.x, size.y + CEAreaHeight);
 
                 // Shift the bar to compensate for the margin not set in current GUI group;
                 // same about the y.
-                TryDrawCEloadout(MainItemMargin, listViewPosition.height - CEAreaHeight - MainItemMargin, listViewPosition.width - CheckboxHeight - MainItemMargin * 2);
+                //TryDrawCEloadout(MainItemMargin, listViewPosition.height - CEAreaHeight - MainItemMargin, listViewPosition.width - CheckboxHeight - MainItemMargin * 2);
                 GUI.EndGroup();
                 GUI.color = Color.white;
                 Text.Anchor = TextAnchor.UpperLeft;

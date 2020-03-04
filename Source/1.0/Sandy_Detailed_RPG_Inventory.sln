@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sandy_Detailed_RPG_Inventory", "Sandy_Detailed_RPG_Inventory.csproj", "{7ED523E4-9562-42CD-8099-1546A3FD5E7A}"
 EndProject
@@ -48,8 +48,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Russian", "Russian", "{62F0
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Patches", "Patches", "{6FADF154-F567-47E8-B9A4-9B554E9EAD75}"
 	ProjectSection(SolutionItems) = preProject
-		..\..\Patches\CE_inventory.xml = ..\..\Patches\CE_inventory.xml
-		..\..\Patches\Ratkin.xml = ..\..\Patches\Ratkin.xml
+		..\..\Patches\AllInventory.xml = ..\..\Patches\AllInventory.xml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FF5D15FC-EA72-48F9-8FA9-BB49D1E44CF4}"
@@ -78,5 +77,8 @@ Global
 		{3529351D-3891-4B83-B89D-288544A49930} = {072775F9-9527-408D-9369-26C28083F2B5}
 		{613893EC-7EAE-41DB-9464-D65AFE86EB5E} = {072775F9-9527-408D-9369-26C28083F2B5}
 		{62F0863D-0BF3-493D-8024-225AAF5F49CE} = {072775F9-9527-408D-9369-26C28083F2B5}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {29C4CB0F-30C5-4040-81EB-958938BA3A72}
 	EndGlobalSection
 EndGlobal

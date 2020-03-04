@@ -8,6 +8,7 @@
 		</value>
 	</Operation>
   <Operation Class="PatchOperationReplace">
+    <success>Always</success>
     <xpath>//inspectorTabs/li[text()="ITab_Pawn_Gear"]</xpath>
     <value>
       <li>Sandy_Detailed_RPG_Inventory.Sandy_Detailed_RPG_GearTab</li>

@@ -400,19 +400,25 @@ namespace Sandy_Detailed_RPG_Inventory
                     //They currently overlape with some appearoll 2 stuff
                     else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Neck) && (layers.Contains(Sandy_Gear_DefOf.Accessories)))
                     {
-                        Rect newRect = RectAtMainItemArea(0, 1);
+                        Rect newRect = RectAtMiscItemArea(1, 1);
                         GUI.DrawTexture(newRect, itemBackground);
                         DrawThingRow1(newRect, current2, false);
                     }
                     else if (bodyPartGroups.Contains(Sandy_Gear_DefOf.Ears) && (layers.Contains(Sandy_Gear_DefOf.Accessories)))
                     {
-                        Rect newRect = RectAtMiscItemArea(1, 0);
+                        Rect newRect = RectAtMiscItemArea(0, 1);
                         GUI.DrawTexture(newRect, itemBackground);
                         DrawThingRow1(newRect, current2, false);
                     }
                     else if (bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand) && (layers.Contains(Sandy_Gear_DefOf.Accessories)))
                     {
                         Rect newRect = RectAtMiscItemArea(0, 0);
+                        GUI.DrawTexture(newRect, itemBackground);
+                        DrawThingRow1(newRect, current2, false);
+                    }
+                    else if (bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand) && (layers.Contains(Sandy_Gear_DefOf.Accessories)))
+                    {
+                        Rect newRect = RectAtMiscItemArea(1, 0);
                         GUI.DrawTexture(newRect, itemBackground);
                         DrawThingRow1(newRect, current2, false);
                     }

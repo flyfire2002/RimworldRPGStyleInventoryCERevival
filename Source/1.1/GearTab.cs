@@ -35,7 +35,8 @@ namespace Sandy_Detailed_RPG_Inventory
         }
     }
 #endif
-
+    
+    [StaticConstructorOnStartup]
     public class Sandy_Detailed_RPG_GearTab : CombatExtended.ITab_Inventory
     {
 #if DEBUG

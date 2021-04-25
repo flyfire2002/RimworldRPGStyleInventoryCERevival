@@ -636,37 +636,59 @@ namespace Sandy_Detailed_RPG_Inventory
             Widgets.Label(textRect, " " + statValue.ToStringTemperature("F0"));
         }
 
-        private void DrawOverallArmor(Rect rect, StatDef stat, string label, Texture image)
+        private string formatArmorValue(float value, string unit)
         {
-            // Dark magic from vanilla code calculating armor value until the blank line.
-            float num = 0f;
-            float num2 = Mathf.Clamp01(SelPawnForGear.GetStatValue(stat, true) / 2f);
-            List<BodyPartRecord> allParts = SelPawnForGear.RaceProps.body.AllParts;
-            List<Apparel> list = (SelPawnForGear.apparel == null) ? null : SelPawnForGear.apparel.WornApparel;
-            for (int i = 0; i < allParts.Count; i++)
+            var asPercent = unit.Equals("%");
+            if (asPercent)
             {
-                float num3 = 1f - num2;
-                if (list != null)
-                {
-                    for (int j = 0; j < list.Count; j++)
-                    {
-                        if (list[j].def.apparel.CoversBodyPart(allParts[i]))
-                        {
-                            float num4 = Mathf.Clamp01(list[j].GetStatValue(stat, true) / 2f);
-                            num3 *= 1f - num4;
-                        }
-                    }
-                }
-                num += allParts[i].coverageAbs * (1f - num3);
+                value *= 100f;
             }
-            num = Mathf.Clamp(num * 2f, 0f, 2f);
+            return value.ToStringByStyle(asPercent ? ToStringStyle.FloatMaxOne : ToStringStyle.FloatMaxTwo) + unit;
+        }
 
+        private void DrawOverallArmor(Rect rect, StatDef stat, string label, string unit, Texture image)
+        {
             Rect iconRect = new Rect(rect.x, rect.y, SmallIconSize, SmallIconSize);
             GUI.DrawTexture(iconRect, image);
             TooltipHandler.TipRegion(iconRect, label);
-            // the 36px can make the percentage number look like it is centered in the field. Brilliant Sandy.
-            Rect valRect = new Rect(rect.x + SmallIconSize + 36f, rect.y + SmallIconMargin, statBoxWidth - SmallIconSize, SmallIconSize);
-            Widgets.Label(valRect, num.ToStringPercent());
+
+            Rect valRect = new Rect(rect.x + SmallIconSize + MediumMargin, rect.y + SmallIconMargin, statBoxWidth - SmallIconSize, SmallIconSize);
+            float num = 0f;
+            List<Apparel> wornApparel = SelPawnForGear.apparel.WornApparel;
+            for (int i = 0; i < wornApparel.Count; i++)
+            {
+                num += wornApparel[i].GetStatValue(stat, true) * wornApparel[i].def.apparel.HumanBodyCoverage;
+            }
+            if (num > 0.005f)
+            {
+                BodyPartRecord bpr = new BodyPartRecord();
+                List<BodyPartRecord> bpList = SelPawnForGear.RaceProps.body.AllParts;
+                string text = "";
+                for (int i = 0; i < bpList.Count; i++)
+                {
+                    float armorValue = 0f;
+                    BodyPartRecord part = bpList[i];
+                    if (part.depth == BodyPartDepth.Outside && (part.coverage >= 0.1 || (part.def == BodyPartDefOf.Eye || part.def == BodyPartDefOf.Neck)))
+                    {
+                        text += part.LabelCap + ": ";
+                        for (int j = wornApparel.Count - 1; j >= 0; j--)
+                        {
+                            Apparel apparel = wornApparel[j];
+                            if (apparel.def.apparel.CoversBodyPart(part))
+                            {
+                                armorValue += apparel.GetStatValue(stat, true);
+                            }
+                        }
+                        text += formatArmorValue(armorValue, unit) + "\n";
+                    }
+                }
+                TooltipHandler.TipRegion(valRect, text);
+                Widgets.Label(valRect, formatArmorValue(num, unit));
+            }
+            else
+            {
+                Widgets.Label(valRect, formatArmorValue(0.0f, unit));
+            }
         }
 
         private float DrawStatBox()
@@ -682,15 +704,15 @@ namespace Sandy_Detailed_RPG_Inventory
                 statBoxWidth, 3 * SmallIconSize + 4 * SmallIconMargin);
             TooltipHandler.TipRegion(armorRect, "OverallArmor".Translate());
             Rect rectsharp = new Rect(armorRect.x, armorRect.y, armorRect.width, SmallIconSize);
-            DrawOverallArmor(rectsharp, StatDefOf.ArmorRating_Sharp, "ArmorSharp".Translate(),
+            DrawOverallArmor(rectsharp, StatDefOf.ArmorRating_Sharp, "ArmorSharp".Translate(), "CE_mmRHA".Translate(),
                 ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorSharp_Icon"));
             Rect rectblunt = new Rect(armorRect.x, armorRect.y + SmallIconSize + 2 * SmallIconMargin,
                 armorRect.width, SmallIconSize);
-            DrawOverallArmor(rectblunt, StatDefOf.ArmorRating_Blunt, "ArmorBlunt".Translate(),
+            DrawOverallArmor(rectblunt, StatDefOf.ArmorRating_Blunt, "ArmorBlunt".Translate(), " " + "CE_MPa".Translate(),
                 ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorBlunt_Icon"));
             Rect rectheat = new Rect(armorRect.x, armorRect.y + 2 * (SmallIconSize + 2 * SmallIconMargin),
                 armorRect.width, SmallIconSize);
-            DrawOverallArmor(rectheat, StatDefOf.ArmorRating_Heat, "ArmorHeat".Translate(),
+            DrawOverallArmor(rectheat, StatDefOf.ArmorRating_Heat, "ArmorHeat".Translate(), "%",
                 ContentFinder<Texture2D>.Get("UI/Icons/Sandy_ArmorHeat_Icon"));
             return armorRect.yMax;
         }

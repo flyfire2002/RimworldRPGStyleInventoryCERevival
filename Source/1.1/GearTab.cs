@@ -94,9 +94,13 @@ namespace Sandy_Detailed_RPG_Inventory
 
         public Sandy_Detailed_RPG_GearTab()
         {
-            size = new Vector2(550f, 565f);
+            size = new Vector2(Sandy_Detailed_RPG_Settings.rpgTabWidth, Sandy_Detailed_RPG_Settings.rpgTabHeight);
             labelKey = "TabGear";
             tutorTag = "Gear";
+        }
+        protected override void UpdateSize()
+        {
+            this.size = new Vector2(Sandy_Detailed_RPG_Settings.rpgTabWidth, Sandy_Detailed_RPG_Settings.rpgTabHeight);
         }
 
         protected override void FillTab()

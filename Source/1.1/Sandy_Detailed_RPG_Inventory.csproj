@@ -98,6 +98,7 @@
     <Compile Include="SandyGearDefOf.cs" />
     <Compile Include="GearTab.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SandyRPGSetting.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

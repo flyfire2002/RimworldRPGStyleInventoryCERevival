@@ -446,18 +446,17 @@ namespace Sandy_Detailed_RPG_Inventory
                         && (bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) || bodyPartGroups.Contains(Sandy_Gear_DefOf.Arms) || bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)
                         || bodyPartGroups.Contains(Sandy_Gear_DefOf.LeftShoulder) || bodyPartGroups.Contains(Sandy_Gear_DefOf.LeftArm) || bodyPartGroups.Contains(BodyPartGroupDefOf.LeftHand)))
                     {
-                        Rect newRect = RectAtEquipmentArea(1);
-                        GUI.DrawTexture(newRect, itemBackground);
-                        DrawThingRow1(newRect, current2, false);
-                    }
-                    /* Not until someone tells me there are right hand shield or dual wield shields lmfao.
-                    else if ((layers.Contains(Sandy_Gear_DefOf.Shield) || layers.Contains(ApparelLayerDefOf.Belt))
-                        && (bodyPartGroups.Contains(Sandy_Gear_DefOf.RightShoulder) || bodyPartGroups.Contains(Sandy_Gear_DefOf.RightArm) || bodyPartGroups.Contains(BodyPartGroupDefOf.RightHand)))
-                    {
                         Rect newRect = RectAtEquipmentArea(1, 1);
                         GUI.DrawTexture(newRect, itemBackground);
                         DrawThingRow1(newRect, current2, false);
-                    }*/
+                    }
+                    // Intended for the Exoframe from Vanilla Weapon Expended. I suspect that this definition might be too wide but we will see.
+                    else if (layers.Contains(ApparelLayerDefOf.Belt) && bodyPartGroups.Contains(BodyPartGroupDefOf.Torso))
+                    {
+                        Rect newRect = RectAtEquipmentArea(0, 1);
+                        GUI.DrawTexture(newRect, itemBackground);
+                        DrawThingRow1(newRect, current2, false);
+                    }
                 }
             }
 
@@ -726,7 +725,7 @@ namespace Sandy_Detailed_RPG_Inventory
             var current = SelPawnForGear.equipment.Primary;
             if (current == null) return;
 
-            Rect itemRect = RectAtEquipmentArea(0);
+            Rect itemRect = RectAtEquipmentArea(0, 0);
             GUI.DrawTexture(itemRect, itemBackground);
             DrawThingRow1(itemRect, current, false);
             if (SelPawnForGear.story.traits.HasTrait(TraitDefOf.Brawler) && current.def.IsRangedWeapon)
@@ -747,16 +746,15 @@ namespace Sandy_Detailed_RPG_Inventory
         {
             return new Rect(MiscItemAreaX + x * (3 * MainItemSize + MiscItemSize + 4 * MainItemMargin), y * (MiscItemSize + MiscItemMargin), MiscItemSize, MiscItemSize);
         }
-        
-        // 0 for weapon, 1 for shield. Until the day when Dual Wield works with CE, or someone come up with an idea that one
-        // should be able to do two shields XD
-        private Rect RectAtEquipmentArea(int y)
+
+        // y=0 for weapon, {x=1, y=1} for Vanilla Weapon Expended Exoframe, {x=1, y=1} for CE shield.
+        private Rect RectAtEquipmentArea(int x, int y)
         {
             if (y == 0)
             {
                 return new Rect(equipmentsAreaTopLeft.x + (statBoxWidth - MainEquipmentSize - EquipmentMargin) / 2, equipmentsAreaTopLeft.y, MainEquipmentSize, MainEquipmentSize);
             }
-            return new Rect(equipmentsAreaTopLeft.x + (statBoxWidth - MiscItemSize - EquipmentMargin) / 2, equipmentsAreaTopLeft.y + y * (MainEquipmentSize + MiscItemMargin), MiscItemSize, MiscItemSize);
+            return new Rect(equipmentsAreaTopLeft.x + SmallIconMargin + x * (MiscItemSize + MediumMargin), equipmentsAreaTopLeft.y + y * (MainEquipmentSize + MiscItemMargin), MiscItemSize, MiscItemSize);
         }
 
         private void DrawMainItemAreaBackground()
@@ -785,14 +783,17 @@ namespace Sandy_Detailed_RPG_Inventory
         private void DrawEquipmentsAreaBackground()
         {
             Rect bgRect;
-            bgRect = RectAtEquipmentArea(0);
+            bgRect = RectAtEquipmentArea(0, 0);
             GUI.DrawTexture(bgRect, itemBackground);
             TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_PrimaryEquipment".Translate());
             // CE doesn't support dual wield, so there is no secondary equipment per se.
-            // bgRect = RectAtEquipmentArea(1, 1);
+            // bgRect = RectAtEquipmentArea(1, 0);
             // GUI.DrawTexture(bgRect, itemBackground);
             // TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_SecondaryEquipment".Translate());
-            bgRect = RectAtEquipmentArea(1);
+            bgRect = RectAtEquipmentArea(0, 1);
+            GUI.DrawTexture(bgRect, itemBackground);
+            TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_VWE_Apparel_Exoframe".Translate());
+            bgRect = RectAtEquipmentArea(1, 1);
             GUI.DrawTexture(bgRect, itemBackground);
             TooltipHandler.TipRegion(bgRect.ContractedBy(EquipmentMargin), "Sandy_ShieldLeft".Translate());
             /* Not until someone tells me there are right hand shield or dual wield shields lmfao.

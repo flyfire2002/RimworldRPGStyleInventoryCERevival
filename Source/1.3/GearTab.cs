@@ -103,7 +103,7 @@ namespace Sandy_Detailed_RPG_Inventory
             this.size = new Vector2(Sandy_Detailed_RPG_Settings.rpgTabWidth, Sandy_Detailed_RPG_Settings.rpgTabHeight);
         }
 
-        protected override void FillTab()
+        public override void FillTab()
         {
 #if DEBUG
             benchmarker.Start();
@@ -491,7 +491,7 @@ namespace Sandy_Detailed_RPG_Inventory
         private void DrawColonist(Rect rect, Pawn pawn)
         {
             Vector2 pos = new Vector2(rect.width, rect.height);
-            GUI.DrawTexture(rect, PortraitsCache.Get(pawn, pos, PawnTextureCameraOffset, 1.28205f));
+            GUI.DrawTexture(rect, PortraitsCache.Get(pawn, pos, Verse.Rot4.South, PawnTextureCameraOffset, 1.28205f));
         }
 
         private void DrawThingRow1(Rect rect, Thing thing, bool inventory = false)

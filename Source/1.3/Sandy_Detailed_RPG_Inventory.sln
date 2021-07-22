@@ -1,0 +1,84 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sandy_Detailed_RPG_Inventory", "Sandy_Detailed_RPG_Inventory.csproj", "{7ED523E4-9562-42CD-8099-1546A3FD5E7A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "About", "About", "{3D478B05-58CD-442E-A411-28EB73BE97AA}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\About\About.xml = ..\..\About\About.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Defs", "Defs", "{C9418447-2100-4EA6-9A53-AD992717DDF2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Jewelry_compat", "Jewelry_compat", "{A042102A-6B75-4965-AD22-A22F2A453AFE}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\Defs\Jewelry_compat\ApparelLayerDefs.xml = ..\..\Defs\Jewelry_compat\ApparelLayerDefs.xml
+		..\..\Defs\Jewelry_compat\BodyPartGroups.xml = ..\..\Defs\Jewelry_compat\BodyPartGroups.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Languages", "Languages", "{072775F9-9527-408D-9369-26C28083F2B5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ChineseSimplified", "ChineseSimplified", "{DDCADA8F-2D48-43BC-AA76-123507757850}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\Languages\ChineseSimplified\Keyed\Sandy_Detailed_RPG_Gear.xml = ..\..\Languages\ChineseSimplified\Keyed\Sandy_Detailed_RPG_Gear.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ChineseTraditional", "ChineseTraditional", "{8B8DBFF9-8BFC-4C9C-B75A-04B1701EF67D}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\Languages\ChineseTraditional\Keyed\Sandy_Detailed_RPG_Gear.xml = ..\..\Languages\ChineseTraditional\Keyed\Sandy_Detailed_RPG_Gear.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "English", "English", "{3529351D-3891-4B83-B89D-288544A49930}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\Languages\English\Keyed\Sandy_Detailed_RPG_Gear.xml = ..\..\Languages\English\Keyed\Sandy_Detailed_RPG_Gear.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "French", "French", "{613893EC-7EAE-41DB-9464-D65AFE86EB5E}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\Languages\French\LanguageInfo.xml = ..\..\Languages\French\LanguageInfo.xml
+		..\..\Languages\French\Keyed\Sandy_Detailed_RPG_Gear.xml = ..\..\Languages\French\Keyed\Sandy_Detailed_RPG_Gear.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Russian", "Russian", "{62F0863D-0BF3-493D-8024-225AAF5F49CE}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\Languages\Russian\Keyed\Sandy_Detailed_RPG_Gear.xml = ..\..\Languages\Russian\Keyed\Sandy_Detailed_RPG_Gear.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Patches", "Patches", "{6FADF154-F567-47E8-B9A4-9B554E9EAD75}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\Patches\AllInventory.xml = ..\..\Patches\AllInventory.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FF5D15FC-EA72-48F9-8FA9-BB49D1E44CF4}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\LoadFolders.xml = ..\..\LoadFolders.xml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7ED523E4-9562-42CD-8099-1546A3FD5E7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7ED523E4-9562-42CD-8099-1546A3FD5E7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7ED523E4-9562-42CD-8099-1546A3FD5E7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7ED523E4-9562-42CD-8099-1546A3FD5E7A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A042102A-6B75-4965-AD22-A22F2A453AFE} = {C9418447-2100-4EA6-9A53-AD992717DDF2}
+		{DDCADA8F-2D48-43BC-AA76-123507757850} = {072775F9-9527-408D-9369-26C28083F2B5}
+		{8B8DBFF9-8BFC-4C9C-B75A-04B1701EF67D} = {072775F9-9527-408D-9369-26C28083F2B5}
+		{3529351D-3891-4B83-B89D-288544A49930} = {072775F9-9527-408D-9369-26C28083F2B5}
+		{613893EC-7EAE-41DB-9464-D65AFE86EB5E} = {072775F9-9527-408D-9369-26C28083F2B5}
+		{62F0863D-0BF3-493D-8024-225AAF5F49CE} = {072775F9-9527-408D-9369-26C28083F2B5}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {29C4CB0F-30C5-4040-81EB-958938BA3A72}
+	EndGlobalSection
+EndGlobal

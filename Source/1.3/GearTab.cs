@@ -557,6 +557,7 @@ namespace Sandy_Detailed_RPG_Inventory
                 Widgets.ThingIcon(rect1, thing, 1f);
             }
 
+            bool flag = false;
             if (Mouse.IsOver(rect))
             {
                 GUI.color = HighlightColor;
@@ -565,31 +566,56 @@ namespace Sandy_Detailed_RPG_Inventory
                 if (CanControl && (inventory || CanControlColonist || (SelPawnForGear.Spawned && !SelPawnForGear.Map.IsPlayerHome)))
                 {
                     Rect rect2 = new Rect(rect.xMax - SmallIconSize, rect.y, SmallIconSize, SmallIconSize);
-                    TooltipHandler.TipRegion(rect2, "DropThing".Translate());
-                    if (Widgets.ButtonImage(rect2, ContentFinder<Texture2D>.Get("UI/Buttons/Drop", true)))
-                    {
-                        SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
-                        InterfaceDrop(thing);
-                    }
+                    bool flag2 = this.SelPawnForGear.IsQuestLodger() && !(thing is Apparel);
+					Apparel apparel;
+					bool flag3 = (apparel = (thing as Apparel)) != null && this.SelPawnForGear.apparel != null && this.SelPawnForGear.apparel.IsLocked(apparel);
+					flag = (flag2 || flag3);
+					if (Mouse.IsOver(rect2))
+					{
+						if (flag3)
+						{
+							TooltipHandler.TipRegion(rect2, "DropThingLocked".Translate());
+						}
+						else if (flag2)
+						{
+							TooltipHandler.TipRegion(rect2, "DropThingLodger".Translate());
+						}
+						else
+						{
+							TooltipHandler.TipRegion(rect2, "DropThing".Translate());
+						}
+					}
+					Color color = flag ? Color.grey : Color.white;
+					Color mouseoverColor = flag ? color : GenUI.MouseoverColor;
+					if (Widgets.ButtonImage(rect2, ContentFinder<Texture2D>.Get("UI/Buttons/Drop", true), color, mouseoverColor, !flag) && !flag)
+					{
+						SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
+						this.InterfaceDrop(thing);
+					}
                 }
             }
 
-            Apparel apparel = thing as Apparel;
-            if (apparel != null && SelPawnForGear.outfits != null)
+            Apparel apparel2 = thing as Apparel;
+            if (apparel2 != null && SelPawnForGear.outfits != null)
             {
-                if (apparel.WornByCorpse)
+                if (apparel2.WornByCorpse)
                 {
                     Rect rect3 = new Rect(rect.xMax - SmallIconSize, rect.yMax - SmallIconSize, SmallIconSize, SmallIconSize);
                     GUI.DrawTexture(rect3, ContentFinder<Texture2D>.Get("UI/Icons/Sandy_Tainted_Icon", true));
                     TooltipHandler.TipRegion(rect3, "WasWornByCorpse".Translate());
                 }
-                if (SelPawnForGear.outfits.forcedHandler.IsForced(apparel))
+                if (SelPawnForGear.outfits.forcedHandler.IsForced(apparel2))
                 {
-                    text = text + ", " + "ApparelForcedLower".Translate();
+                    text += ", " + "ApparelForcedLower".Translate();
                     Rect rect4 = new Rect(rect.x, rect.yMax - SmallIconSize, SmallIconSize, SmallIconSize);
                     GUI.DrawTexture(rect4, ContentFinder<Texture2D>.Get("UI/Icons/Sandy_Forced_Icon", true));
                     TooltipHandler.TipRegion(rect4, "ForcedApparel".Translate());
                 }
+            }
+
+            if (flag)
+            {
+                text += " (" + "ApparelLockedLower".Translate() + ")";
             }
 
             Text.WordWrap = true;
@@ -882,11 +908,33 @@ namespace Sandy_Detailed_RPG_Inventory
             Rect rect = new Rect(0f, y, width, 28f);
             Widgets.InfoCardButton(rect.width - SmallIconSize, y, thing);
             rect.width -= SmallIconSize;
+            bool flag = false;
             if (this.CanControl && (inventory || this.CanControlColonist || (this.SelPawnForGear.Spawned && !this.SelPawnForGear.Map.IsPlayerHome)))
             {
-                Rect rect2 = new Rect(rect.width - SmallIconSize, y, SmallIconSize, SmallIconSize);
-                TooltipHandler.TipRegion(rect2, "DropThing".Translate());
-                if (Widgets.ButtonImage(rect2, ContentFinder<Texture2D>.Get("UI/Buttons/Drop", true)))
+
+                Rect rect2 = new Rect(rect.xMax - SmallIconSize, rect.y, SmallIconSize, SmallIconSize);
+                bool flag2 = this.SelPawnForGear.IsQuestLodger() && !(thing is Apparel);
+                Apparel apparel;
+                bool flag3 = (apparel = (thing as Apparel)) != null && this.SelPawnForGear.apparel != null && this.SelPawnForGear.apparel.IsLocked(apparel);
+                flag = (flag2 || flag3);
+                if (Mouse.IsOver(rect2))
+                {
+                    if (flag3)
+                    {
+                        TooltipHandler.TipRegion(rect2, "DropThingLocked".Translate());
+                    }
+                    else if (flag2)
+                    {
+                        TooltipHandler.TipRegion(rect2, "DropThingLodger".Translate());
+                    }
+                    else
+                    {
+                        TooltipHandler.TipRegion(rect2, "DropThing".Translate());
+                    }
+                }
+                Color color = flag ? Color.grey : Color.white;
+                Color mouseoverColor = flag ? color : GenUI.MouseoverColor;
+                if (Widgets.ButtonImage(rect2, ContentFinder<Texture2D>.Get("UI/Buttons/Drop", true), color, mouseoverColor, !flag) && !flag)
                 {
                     SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
                     this.InterfaceDrop(thing);
@@ -924,10 +972,14 @@ namespace Sandy_Detailed_RPG_Inventory
             GUI.color = ThingLabelColor;
             Rect rect5 = new Rect(36f, y, rect.width - 36f, rect.height);
             string text = thing.LabelCap;
-            Apparel apparel = thing as Apparel;
-            if (apparel != null && this.SelPawnForGear.outfits != null && this.SelPawnForGear.outfits.forcedHandler.IsForced(apparel))
+            Apparel apparel2 = thing as Apparel;
+            if (apparel2 != null && this.SelPawnForGear.outfits != null && this.SelPawnForGear.outfits.forcedHandler.IsForced(apparel2))
             {
-                text = text + ", " + "ApparelForcedLower".Translate();
+                text += ", " + "ApparelForcedLower".Translate();
+            }
+            if (flag)
+            {
+                text += " (" + "ApparelLockedLower".Translate() + ")";
             }
             Text.WordWrap = false;
             Widgets.Label(rect5, text.Truncate(rect5.width, null));

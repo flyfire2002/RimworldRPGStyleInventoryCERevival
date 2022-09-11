@@ -22,7 +22,6 @@ namespace Sandy_Detailed_RPG_Inventory
         public static ApparelLayerDef Shield;
         public static ApparelLayerDef OnHead;
         public static ApparelLayerDef StrappedHead;
-        public static ApparelLayerDef MiddleHead;
         // CE BodyPartGroups
         public static BodyPartGroupDef LeftShoulder;
         public static BodyPartGroupDef RightShoulder;
@@ -35,7 +34,7 @@ namespace Sandy_Detailed_RPG_Inventory
 
         public static bool ContainsCEHeadLayer(List<ApparelLayerDef> layers)
         {
-            return layers.Contains(StrappedHead) || layers.Contains(MiddleHead) || layers.Contains(OnHead);
+            return layers.Contains(StrappedHead) || layers.Contains(OnHead);
         }
     }
 }

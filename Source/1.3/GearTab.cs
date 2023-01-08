@@ -441,6 +441,13 @@ namespace Sandy_Detailed_RPG_Inventory
                         GUI.DrawTexture(newRect, itemBackground);
                         DrawThingRow1(newRect, current2, false);
                     }
+                    else if ((layers.Contains(Sandy_Gear_DefOf.Backpack) || layers.Contains(Sandy_Gear_DefOf.Webbing))
+                        && bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
+                    {
+                        Rect newRect = RectAtMiscItemArea(1, 3);
+                        GUI.DrawTexture(newRect, itemBackground);
+                        DrawThingRow1(newRect, current2, false);
+                    }
                     // CE Shield, Belt layer to make anything not yet moved to Shield-layer-style compatible
                     else if ((layers.Contains(Sandy_Gear_DefOf.Shield) || layers.Contains(ApparelLayerDefOf.Belt))
                         && (bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) || bodyPartGroups.Contains(Sandy_Gear_DefOf.Arms) || bodyPartGroups.Contains(Sandy_Gear_DefOf.Hands)

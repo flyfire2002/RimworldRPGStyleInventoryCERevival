@@ -464,6 +464,12 @@ namespace Sandy_Detailed_RPG_Inventory
                         GUI.DrawTexture(newRect, itemBackground);
                         DrawThingRow1(newRect, current2, false);
                     }
+                    else if (layers.Contains(Sandy_Gear_DefOf.Satchel) && bodyPartGroups.Contains(Sandy_Gear_DefOf.Waist))
+                    {
+                        Rect newRect = RectAtMiscItemArea(1, 6);
+                        GUI.DrawTexture(newRect, itemBackground);
+                        DrawThingRow1(newRect, current2, false);
+                    }
                 }
             }
 

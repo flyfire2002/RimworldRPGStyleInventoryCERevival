@@ -56,6 +56,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\..\LoadFolders.xml = ..\..\LoadFolders.xml
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Research_Reinvented", "Research_Reinvented", "{A2F64A03-EB04-4481-ADB1-CFCC727EADEA}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\Defs\Research_Reinvented\ApparelLayerDefs.xml = ..\..\Defs\Research_Reinvented\ApparelLayerDefs.xml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +82,7 @@ Global
 		{3529351D-3891-4B83-B89D-288544A49930} = {072775F9-9527-408D-9369-26C28083F2B5}
 		{613893EC-7EAE-41DB-9464-D65AFE86EB5E} = {072775F9-9527-408D-9369-26C28083F2B5}
 		{62F0863D-0BF3-493D-8024-225AAF5F49CE} = {072775F9-9527-408D-9369-26C28083F2B5}
+		{A2F64A03-EB04-4481-ADB1-CFCC727EADEA} = {C9418447-2100-4EA6-9A53-AD992717DDF2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {29C4CB0F-30C5-4040-81EB-958938BA3A72}

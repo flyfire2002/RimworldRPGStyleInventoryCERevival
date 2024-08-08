@@ -112,7 +112,7 @@ namespace Sandy_Detailed_RPG_Inventory
             Rect checkBox = new Rect(20f, 0f, 140f, 30f);
             Widgets.CheckboxLabeled(checkBox, "Sandy_ViewList".Translate(), ref viewlist, false, null, null, false);
 
-            // Delegate to vanilla Filltab (sans drawing CE loadout bars) if show as list is chosen, or if the pawn is not human
+            // Delegate to CE's Filltab implementation if show as list is chosen, or if the pawn is not human
             // (e.g. muffalo with cargo)
             if (viewlist || !SelPawnForGear.RaceProps.Humanlike)
             {
@@ -123,15 +123,7 @@ namespace Sandy_Detailed_RPG_Inventory
                 Text.Font = GameFont.Small;
                 GUI.color = Color.white;
 
-                // Hack. Vanilla Filltab use size.y to set BeginGroup. Change it here so the list GUI
-                // group doesn't overlap with CE loadout bars.
-                // Not needed if inheriting CE's inventory tab since it draws the bars
-                //
-                // size.Set(size.x, size.y - CEAreaHeight);
                 base.FillTab();
-                // Restore the size.y, otherwise the tab will shrink by 60px per frame.
-                //
-                // size.Set(size.x, size.y + CEAreaHeight);
 
                 // Shift the bar to compensate for the margin not set in current GUI group;
                 // same about the y.
@@ -639,6 +631,173 @@ namespace Sandy_Detailed_RPG_Inventory
                 text2 = $"{text3}\n{thing.HitPoints} / {thing.MaxHitPoints}";
             }
             TooltipHandler.TipRegion(rect, text2);
+
+
+            // RMB menu
+            if (Widgets.ButtonInvisible(rect) && Event.current.button == 1)
+            {
+                List<FloatMenuOption> floatOptionList = new List<FloatMenuOption>
+                {
+                    new FloatMenuOption("ThingInfo".Translate(), delegate
+                    {
+                        Find.WindowStack.Add(new Dialog_InfoCard(thing));
+                    }, MenuOptionPriority.Default, null, null)
+                };
+                if (CanControl)
+                {
+                    // Equip option
+                    ThingWithComps eq = thing as ThingWithComps;
+                    if (eq != null && eq.TryGetComp<CompEquippable>() != null)
+                    {
+                        CompInventory compInventory = SelPawnForGear.TryGetComp<CompInventory>();
+                        CompBiocodable compBiocoded = eq.TryGetComp<CompBiocodable>();
+                        if (compInventory != null)
+                        {
+                            FloatMenuOption equipOption;
+                            string eqLabel = GenLabel.ThingLabel(eq.def, eq.Stuff, 1);
+                            if (compBiocoded != null && compBiocoded.Biocoded && compBiocoded.CodedPawn != SelPawnForGear)
+                            {
+                                equipOption = new FloatMenuOption("CannotEquip".Translate(eqLabel) + ": " + "BiocodedCodedForSomeoneElse".Translate(), null);
+                            }
+                            else if (SelPawnForGear.IsQuestLodger() && !EquipmentUtility.QuestLodgerCanEquip(eq, SelPawnForGear))
+                            {
+                                var forbiddenEquipOrPutAway = SelPawnForGear.equipment.AllEquipmentListForReading.Contains(eq) ? "CE_CannotPutAway".Translate(eqLabel) : "CannotEquip".Translate(eqLabel);
+                                equipOption = new FloatMenuOption(forbiddenEquipOrPutAway + ": " + "CE_CannotChangeEquipment".Translate(), null);
+                            }
+                            else if (SelPawnForGear.equipment.AllEquipmentListForReading.Contains(eq) && SelPawnForGear.inventory != null)
+                            {
+                                equipOption = new FloatMenuOption("CE_PutAway".Translate(eqLabel),
+                                                                  () => SelPawnForGear.equipment.TryTransferEquipmentToContainer(SelPawnForGear.equipment.Primary, SelPawnForGear.inventory.innerContainer));
+                            }
+                            else if (!SelPawnForGear.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation))
+                            {
+                                equipOption = new FloatMenuOption("CannotEquip".Translate(eqLabel), null);
+                            }
+                            else
+                            {
+                                string equipOptionLabel = "Equip".Translate(eqLabel);
+                                if (eq.def.IsRangedWeapon && SelPawnForGear.story != null && SelPawnForGear.story.traits.HasTrait(TraitDefOf.Brawler))
+                                {
+                                    equipOptionLabel = equipOptionLabel + " " + "EquipWarningBrawler".Translate();
+                                }
+                                equipOption = new FloatMenuOption(
+                                    equipOptionLabel,
+                                    (SelPawnForGear.story != null && SelPawnForGear.WorkTagIsDisabled(WorkTags.Violent))
+                                    ? null
+                                    : new Action(() => compInventory.TrySwitchToWeapon(eq)));
+                            }
+                            floatOptionList.Add(equipOption);
+                        }
+                    }
+                    //Reload apparel option
+                    var worn_apparel = SelPawnForGear?.apparel?.WornApparel;
+                    foreach (var apparel in worn_apparel)
+                    {
+                        var compReloadable = apparel.TryGetComp<CompApparelReloadable>();
+                        if (compReloadable != null && compReloadable.AmmoDef == thing.def && compReloadable.NeedsReload(true))
+                        {
+                            if (!SelPawnForGear.Drafted)    //TODO-1.2 This should be doable for drafted pawns as well, but the job does nothing. Figure out what's wrong and remove this condition.
+                            {
+                                FloatMenuOption reloadApparelOption = new FloatMenuOption(
+                                    "CE_ReloadApparel".Translate(apparel.Label, thing.Label),
+                                    new Action(delegate
+                                    {
+                                        SelPawnForGear.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.Reload, apparel, thing));
+                                    })
+                                );
+                                floatOptionList.Add(reloadApparelOption);
+                            }
+
+                        }
+                    }
+                    // Consume option
+                    if (CanControl && thing.IngestibleNow && base.SelPawn.RaceProps.CanEverEat(thing))
+                    {
+                        Action eatFood = delegate
+                        {
+                            SoundDefOf.Tick_High.PlayOneShotOnCamera();
+                            InterfaceIngest(thing);
+                        };
+
+                        string label = thing.def.ingestible.ingestCommandString.NullOrEmpty() ? (string)"ConsumeThing".Translate(thing.LabelShort, thing) : string.Format(thing.def.ingestible.ingestCommandString, thing.LabelShort);
+                        // Display a warning if the food will lower pawn's mood
+                        if (FoodUtility.MoodFromIngesting(SelPawnForGear, thing, thing.def) < 0)
+                        {
+                            label = $"{label}: ({"WarningFoodDisliked".Translate()})";
+                        }
+
+                        FloatMenuOption floatMenuOption = null;
+
+                        // Handle drug related ideology stuff
+                        if (ModsConfig.IdeologyActive && thing.def.IsDrug)
+                        {
+                            if (!new HistoryEvent(HistoryEventDefOf.IngestedDrug, SelPawnForGear.Named(HistoryEventArgsNames.Doer)).Notify_PawnAboutToDo(out floatMenuOption, label) && !PawnUtility.CanTakeDrugForDependency(SelPawnForGear, thing.def))
+                            {
+                                floatOptionList.Add(floatMenuOption);
+                            }
+                            else if (thing.def.ingestible.drugCategory == DrugCategory.Medical && !new HistoryEvent(HistoryEventDefOf.IngestedRecreationalDrug, SelPawnForGear.Named(HistoryEventArgsNames.Doer)).Notify_PawnAboutToDo(out floatMenuOption, label) && !PawnUtility.CanTakeDrugForDependency(SelPawnForGear, thing.def))
+                            {
+                                floatOptionList.Add(floatMenuOption);
+                            }
+                            else if (thing.def.ingestible.drugCategory == DrugCategory.Hard && !new HistoryEvent(HistoryEventDefOf.IngestedHardDrug, SelPawnForGear.Named(HistoryEventArgsNames.Doer)).Notify_PawnAboutToDo(out floatMenuOption, label))
+                            {
+                                floatOptionList.Add(floatMenuOption);
+                            }
+                        }
+
+                        if (floatMenuOption == null)
+                        {
+                            // Handle teetotaler trait with drugs, considering dependency genes
+                            if (thing.def.IsNonMedicalDrug && !SelPawnForGear.CanTakeDrug(thing.def))
+                            {
+                                floatOptionList.Add(new FloatMenuOption(label + ": " + TraitDefOf.DrugDesire.DataAtDegree(-1).GetLabelCapFor(SelPawnForGear), null));
+                            }
+                            // Royal traits and inappropriate food, always allowed if pawn is starving, ascetic, or will gain joy from ingesting
+                            else if (FoodUtility.InappropriateForTitle(thing.def, SelPawnForGear, true))
+                            {
+                                floatOptionList.Add(new FloatMenuOption(label + ": " + "FoodBelowTitleRequirements".Translate(SelPawnForGear.royalty.MostSeniorTitle.def.GetLabelFor(SelPawnForGear).CapitalizeFirst()).CapitalizeFirst(), null));
+                            }
+                            else
+                            {
+                                floatOptionList.Add(new FloatMenuOption(label, eatFood));
+                            }
+                        }
+                    }
+                    // Drop, and drop&haul options
+                    if (SelPawnForGear.IsItemQuestLocked(eq))
+                    {
+                        floatOptionList.Add(new FloatMenuOption("CE_CannotDropThing".Translate() + ": " + "DropThingLocked".Translate(), null));
+                        floatOptionList.Add(new FloatMenuOption("CE_CannotDropThingHaul".Translate() + ": " + "DropThingLocked".Translate(), null));
+                    }
+                    // Don't display drop option for mechanoids
+                    else if (!SelPawnForGear.IsItemMechanoidWeapon(eq))
+                    {
+                        floatOptionList.Add(new FloatMenuOption("DropThing".Translate(), new Action(delegate
+                        {
+                            SoundDefOf.Tick_High.PlayOneShotOnCamera();
+                            InterfaceDrop(thing);
+                        })));
+                        floatOptionList.Add(new FloatMenuOption("CE_DropThingHaul".Translate(), new Action(delegate
+                        {
+                            SoundDefOf.Tick_High.PlayOneShotOnCamera();
+                            InterfaceDropHaul(thing);
+                        })));
+                    }
+                    // Stop holding in inventory option
+                    if (CanControl && HoldTrackerIsHeld(SelPawnForGear, thing))
+                    {
+                        Action forgetHoldTracker = delegate
+                        {
+                            SoundDefOf.Tick_High.PlayOneShotOnCamera();
+                            HoldTrackerForget(SelPawnForGear, thing);
+                        };
+                        floatOptionList.Add(new FloatMenuOption("CE_HoldTrackerForget".Translate(), forgetHoldTracker));
+                    }
+                }
+                FloatMenu window = new FloatMenu(floatOptionList, thing.LabelCap, false);
+                Find.WindowStack.Add(window);
+            }
+            // end menu
         }
 
         private void DrawMassInfo(Vector2 topLeft)
@@ -843,7 +1002,8 @@ namespace Sandy_Detailed_RPG_Inventory
         }
 
         // xShift: how much to right to adjust the two bars
-        private void TryDrawCEloadout(float xShift, float y, float width) {
+        private void TryDrawCEloadout(float xShift, float y, float width)
+        {
             CompInventory comp = SelPawn.TryGetComp<CompInventory>();
             if (comp == null)
             {
@@ -873,7 +1033,28 @@ namespace Sandy_Detailed_RPG_Inventory
 
             Text.Anchor = TextAnchor.UpperLeft;
         }
-        
+
+        private bool HoldTrackerIsHeld(Pawn pawn, Thing thing)
+        {
+            List<HoldRecord> recs = LoadoutManager.GetHoldRecords(pawn);
+            return recs != null && recs.Any(hr => hr.thingDef == thing.def);
+        }
+
+        private void HoldTrackerForget(Pawn pawn, Thing thing)
+        {
+            List<HoldRecord> recs = LoadoutManager.GetHoldRecords(pawn);
+            if (recs == null)
+            {
+                Log.Error(string.Concat(pawn.Name, " wasn't being tracked by HoldTracker and tried to forget a ThingDef ", thing.def, "."));
+                return;
+            }
+            HoldRecord rec = recs.FirstOrDefault(hr => hr.thingDef == thing.def);
+            if (rec != null)
+            {
+                recs.RemoveAt(recs.IndexOf(rec));
+            }
+        }
+
         #region Duplicate_Base_Code
         /* ========================== Duplicate code ahead ==========================
          * Everything below is duplicated from the base class since they are private to it. Damn it, Tynan.
@@ -1030,6 +1211,31 @@ namespace Sandy_Detailed_RPG_Inventory
             {
                 Thing thing;
                 this.SelPawnForGear.inventory.innerContainer.TryDrop(t, this.SelPawnForGear.Position, this.SelPawnForGear.Map, ThingPlaceMode.Near, out thing, null, null);
+            }
+        }
+
+        private void InterfaceDropHaul(Thing t)
+        {
+            if (HoldTrackerIsHeld(SelPawnForGear, t))
+            {
+                HoldTrackerForget(SelPawnForGear, t);
+            }
+            ThingWithComps thingWithComps = t as ThingWithComps;
+            Apparel apparel = t as Apparel;
+            if (apparel != null && SelPawnForGear.apparel != null && SelPawnForGear.apparel.WornApparel.Contains(apparel))
+            {
+                Job job = JobMaker.MakeJob(JobDefOf.RemoveApparel, apparel);
+                job.haulDroppedApparel = true;
+                SelPawnForGear.jobs.TryTakeOrderedJob(job);
+            }
+            else if (thingWithComps != null && SelPawnForGear.equipment != null && SelPawnForGear.equipment.AllEquipmentListForReading.Contains(thingWithComps))
+            {
+                SelPawnForGear.jobs.TryTakeOrderedJob(JobMaker.MakeJob(JobDefOf.DropEquipment, thingWithComps));
+            }
+            else if (!t.def.destroyOnDrop)
+            {
+                Thing thing;
+                SelPawn.inventory.innerContainer.TryDrop(t, SelPawn.Position, SelPawn.Map, ThingPlaceMode.Near, out thing);
             }
         }
 

@@ -504,50 +504,50 @@ namespace Sandy_Detailed_RPG_Inventory
             QualityCategory c;
             if (thing.TryGetQuality(out c))
             {
-                switch(c)
+                switch (c)
                 {
                     case QualityCategory.Legendary:
-                    {
-                        GUI.DrawTexture(rect, ContentFinder<Texture2D>.Get("UI/Frames/RPG_Legendary", true));
-                        break;
-                    }
+                        {
+                            GUI.DrawTexture(rect, ContentFinder<Texture2D>.Get("UI/Frames/RPG_Legendary", true));
+                            break;
+                        }
                     case QualityCategory.Masterwork:
-                    {
-                        GUI.DrawTexture(rect, ContentFinder<Texture2D>.Get("UI/Frames/RPG_Masterwork", true));
-                        break;
-                    }
+                        {
+                            GUI.DrawTexture(rect, ContentFinder<Texture2D>.Get("UI/Frames/RPG_Masterwork", true));
+                            break;
+                        }
                     case QualityCategory.Excellent:
-                    {
-                        GUI.DrawTexture(rect, ContentFinder<Texture2D>.Get("UI/Frames/RPG_Excellent", true));
-                        break;
-                    }
+                        {
+                            GUI.DrawTexture(rect, ContentFinder<Texture2D>.Get("UI/Frames/RPG_Excellent", true));
+                            break;
+                        }
                     case QualityCategory.Good:
-                    {
-                        GUI.DrawTexture(rect, ContentFinder<Texture2D>.Get("UI/Frames/RPG_Good", true));
-                        break;
-                    }
+                        {
+                            GUI.DrawTexture(rect, ContentFinder<Texture2D>.Get("UI/Frames/RPG_Good", true));
+                            break;
+                        }
                     case QualityCategory.Normal:
-                    {
-                        GUI.DrawTexture(rect, ContentFinder<Texture2D>.Get("UI/Frames/RPG_Normal", true));
-                        break;
-                    }
+                        {
+                            GUI.DrawTexture(rect, ContentFinder<Texture2D>.Get("UI/Frames/RPG_Normal", true));
+                            break;
+                        }
                     case QualityCategory.Poor:
-                    {
-                        GUI.DrawTexture(rect, ContentFinder<Texture2D>.Get("UI/Frames/RPG_Poor", true));
-                        break;
-                    }
+                        {
+                            GUI.DrawTexture(rect, ContentFinder<Texture2D>.Get("UI/Frames/RPG_Poor", true));
+                            break;
+                        }
                     case QualityCategory.Awful:
-                    {
-                        GUI.DrawTexture(rect, ContentFinder<Texture2D>.Get("UI/Frames/RPG_Awful", true));
-                        break;
-                    }
+                        {
+                            GUI.DrawTexture(rect, ContentFinder<Texture2D>.Get("UI/Frames/RPG_Awful", true));
+                            break;
+                        }
                 }
             }
             float mass = thing.GetStatValue(StatDefOf.Mass, true) * (float)thing.stackCount;
             string smass = mass.ToString("G") + " kg";
             string text = thing.LabelCap;
             Rect rect5 = rect.ContractedBy(2f);
-            float num2 = rect5.height * ((float) thing.HitPoints / (float) thing.MaxHitPoints);
+            float num2 = rect5.height * ((float)thing.HitPoints / (float)thing.MaxHitPoints);
             rect5.yMin = rect5.yMax - num2;
             rect5.height = num2;
             Texture2D durationColor = ContentFinder<Texture2D>.Get("UI/Icons/Sandy_Not_Tattered");
@@ -572,31 +572,31 @@ namespace Sandy_Detailed_RPG_Inventory
                 {
                     Rect rect2 = new Rect(rect.xMax - SmallIconSize, rect.y, SmallIconSize, SmallIconSize);
                     bool flag2 = this.SelPawnForGear.IsQuestLodger() && !(thing is Apparel);
-					Apparel apparel;
-					bool flag3 = (apparel = (thing as Apparel)) != null && this.SelPawnForGear.apparel != null && this.SelPawnForGear.apparel.IsLocked(apparel);
-					flag = (flag2 || flag3);
-					if (Mouse.IsOver(rect2))
-					{
-						if (flag3)
-						{
-							TooltipHandler.TipRegion(rect2, "DropThingLocked".Translate());
-						}
-						else if (flag2)
-						{
-							TooltipHandler.TipRegion(rect2, "DropThingLodger".Translate());
-						}
-						else
-						{
-							TooltipHandler.TipRegion(rect2, "DropThing".Translate());
-						}
-					}
-					Color color = flag ? Color.grey : Color.white;
-					Color mouseoverColor = flag ? color : GenUI.MouseoverColor;
-					if (Widgets.ButtonImage(rect2, ContentFinder<Texture2D>.Get("UI/Buttons/Drop", true), color, mouseoverColor, !flag) && !flag)
-					{
-						SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
-						this.InterfaceDrop(thing);
-					}
+                    Apparel apparel;
+                    bool flag3 = (apparel = (thing as Apparel)) != null && this.SelPawnForGear.apparel != null && this.SelPawnForGear.apparel.IsLocked(apparel);
+                    flag = (flag2 || flag3);
+                    if (Mouse.IsOver(rect2))
+                    {
+                        if (flag3)
+                        {
+                            TooltipHandler.TipRegion(rect2, "DropThingLocked".Translate());
+                        }
+                        else if (flag2)
+                        {
+                            TooltipHandler.TipRegion(rect2, "DropThingLodger".Translate());
+                        }
+                        else
+                        {
+                            TooltipHandler.TipRegion(rect2, "DropThing".Translate());
+                        }
+                    }
+                    Color color = flag ? Color.grey : Color.white;
+                    Color mouseoverColor = flag ? color : GenUI.MouseoverColor;
+                    if (Widgets.ButtonImage(rect2, ContentFinder<Texture2D>.Get("UI/Buttons/Drop", true), color, mouseoverColor, !flag) && !flag)
+                    {
+                        SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
+                        this.InterfaceDrop(thing);
+                    }
                 }
             }
 
@@ -632,7 +632,11 @@ namespace Sandy_Detailed_RPG_Inventory
             }
             TooltipHandler.TipRegion(rect, text2);
 
+            DrawRMBMenu(rect, thing);
+        }
 
+        private void DrawRMBMenu(Rect rect, Thing thing)
+        {
             // RMB menu
             if (Widgets.ButtonInvisible(rect) && Event.current.button == 1)
             {
@@ -1192,6 +1196,9 @@ namespace Sandy_Detailed_RPG_Inventory
                 });
             }
             TooltipHandler.TipRegion(rect, text2);
+
+            DrawRMBMenu(rect, thing);
+
             y += 28f;
         }
 

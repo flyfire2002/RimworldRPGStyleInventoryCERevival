@@ -14,6 +14,7 @@ namespace Sandy_Detailed_RPG_Inventory
         public static BodyPartGroupDef Shoulders;
         public static BodyPartGroupDef Arms;
         public static BodyPartGroupDef Hands;
+        public static BodyPartGroupDef Torso;
         public static BodyPartGroupDef Waist;
         public static BodyPartGroupDef Feet;
         // CE Layers

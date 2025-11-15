@@ -420,7 +420,8 @@ namespace Sandy_Detailed_RPG_Inventory
                         DrawThingRow1(newRect, current2, false);
                     }
                     // CE TacVest
-                    else if (layers.Contains(Sandy_Gear_DefOf.Webbing) && bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders))
+                    else if (layers.Contains(Sandy_Gear_DefOf.Webbing) && 
+                             (bodyPartGroups.Contains(Sandy_Gear_DefOf.Shoulders) || bodyPartGroups.Contains(Sandy_Gear_DefOf.Torso)))
                     {
                         Rect newRect = RectAtMainItemArea(0, 3);
                         GUI.DrawTexture(newRect, itemBackground);
